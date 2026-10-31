@@ -1,0 +1,32 @@
+{
+  "source_mesh": "/MetaHumanCharacter/Face/SKM_Face",
+  "source": "Installed Unreal Engine 5.8 MetaHuman character/identity template resources",
+  "runtime": "Baked neutral head geometry plus exported textures; no creator services or facial-animation plugin dependency",
+  "materials": [
+    "head_shader_shader",
+    "teeth_shader_shader",
+    "saliva_shader_shader",
+    "eyeLeft_shader_shader",
+    "eyeRight_shader_shader",
+    "eyeshell_shader_shader",
+    "eyelashes_shader_shader",
+    "eyeEdge_shader_shader",
+    "cartilage_shader_shader",
+    "head_LOD1_shader_shader",
+    "eyelashes_HiLOD_shader_shader",
+    "head_LOD2_shader_shader",
+    "head_LOD3_shader_shader",
+    "head_LOD4_shader_shader",
+    "head_LOD57_shader_shader"
+  ],
+  "albedo": {
+    "male": "male-skin-albedo.png",
+    "female": "female-skin-albedo.png",
+    "tool": "built-in image generation",
+    "prompts": "prompts.md",
+    "guide": "color.png (technical guide, reference only)"
+  },
+  "runtime_eye": "authored procedural iris and sclera material",
+  "runtime_geometry": "HeroHeadV3: donor chest clipped below local Z=-9 cm; lower neck tapered into fitted seam; pose-driven neck connects to body collar",
+  "preparation": "tools/prepare_helmet_fit.py"
+}

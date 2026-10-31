@@ -1,0 +1,599 @@
+{
+  "sequence_address": "0x4000",
+  "frequency_addresses": [
+    "0xc300",
+    "0xc340"
+  ],
+  "slots": [
+    26,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    26,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    26,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    30,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    30,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    30,
+    0,
+    26,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    26,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    27,
+    0,
+    27,
+    0,
+    28,
+    0,
+    29,
+    0,
+    30,
+    2,
+    31,
+    0,
+    32,
+    0,
+    33,
+    0,
+    30,
+    0,
+    31,
+    0,
+    32,
+    0,
+    33,
+    0,
+    30,
+    0,
+    31,
+    0,
+    32,
+    0,
+    33,
+    0,
+    37,
+    37,
+    37,
+    37,
+    36,
+    36,
+    36,
+    36,
+    35,
+    35,
+    35,
+    35,
+    34,
+    34,
+    34,
+    34,
+    33,
+    33,
+    33,
+    33,
+    32,
+    32,
+    32,
+    32,
+    31,
+    0,
+    30,
+    0,
+    29,
+    0,
+    253,
+    0,
+    250
+  ],
+  "slot_seconds": 0.08333333333333333,
+  "phrase_seconds": 10.666666666666666,
+  "loop_seconds": 42.666666666666664,
+  "events": [
+    {
+      "slot": 0,
+      "note_index": 26,
+      "frequency": 211.88108825683594,
+      "duration": 0.15
+    },
+    {
+      "slot": 2,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 4,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 6,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 8,
+      "note_index": 26,
+      "frequency": 211.88108825683594,
+      "duration": 0.15
+    },
+    {
+      "slot": 10,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 12,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 14,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 16,
+      "note_index": 26,
+      "frequency": 211.88108825683594,
+      "duration": 0.15
+    },
+    {
+      "slot": 18,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 20,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 22,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 24,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 26,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 28,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 30,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 32,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 34,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 36,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 38,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 40,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 42,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 44,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 46,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 48,
+      "note_index": 26,
+      "frequency": 211.88108825683594,
+      "duration": 0.15
+    },
+    {
+      "slot": 50,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 52,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 54,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 56,
+      "note_index": 26,
+      "frequency": 211.88108825683594,
+      "duration": 0.15
+    },
+    {
+      "slot": 58,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 60,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 62,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 64,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 66,
+      "note_index": 27,
+      "frequency": 237.83769607543945,
+      "duration": 0.15
+    },
+    {
+      "slot": 68,
+      "note_index": 28,
+      "frequency": 251.9905071258545,
+      "duration": 0.15
+    },
+    {
+      "slot": 70,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    },
+    {
+      "slot": 72,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 73,
+      "note_index": 2,
+      "frequency": 19.79044532775879,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 74,
+      "note_index": 31,
+      "frequency": 336.37884521484375,
+      "duration": 0.15
+    },
+    {
+      "slot": 76,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.15
+    },
+    {
+      "slot": 78,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.15
+    },
+    {
+      "slot": 80,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 82,
+      "note_index": 31,
+      "frequency": 336.37884521484375,
+      "duration": 0.15
+    },
+    {
+      "slot": 84,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.15
+    },
+    {
+      "slot": 86,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.15
+    },
+    {
+      "slot": 88,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 90,
+      "note_index": 31,
+      "frequency": 336.37884521484375,
+      "duration": 0.15
+    },
+    {
+      "slot": 92,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.15
+    },
+    {
+      "slot": 94,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.15
+    },
+    {
+      "slot": 96,
+      "note_index": 37,
+      "frequency": 635.0560111999512,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 97,
+      "note_index": 37,
+      "frequency": 635.0560111999512,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 98,
+      "note_index": 37,
+      "frequency": 635.0560111999512,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 99,
+      "note_index": 37,
+      "frequency": 635.0560111999512,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 100,
+      "note_index": 36,
+      "frequency": 565.7600898742676,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 101,
+      "note_index": 36,
+      "frequency": 565.7600898742676,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 102,
+      "note_index": 36,
+      "frequency": 565.7600898742676,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 103,
+      "note_index": 36,
+      "frequency": 565.7600898742676,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 104,
+      "note_index": 35,
+      "frequency": 504.03973960876465,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 105,
+      "note_index": 35,
+      "frequency": 504.03973960876465,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 106,
+      "note_index": 35,
+      "frequency": 504.03973960876465,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 107,
+      "note_index": 35,
+      "frequency": 504.03973960876465,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 108,
+      "note_index": 34,
+      "frequency": 475.73411750793457,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 109,
+      "note_index": 34,
+      "frequency": 475.73411750793457,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 110,
+      "note_index": 34,
+      "frequency": 475.73411750793457,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 111,
+      "note_index": 34,
+      "frequency": 475.73411750793457,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 112,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 113,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 114,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 115,
+      "note_index": 33,
+      "frequency": 423.82090187072754,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 116,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 117,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 118,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 119,
+      "note_index": 32,
+      "frequency": 377.6040458679199,
+      "duration": 0.06666666666666667
+    },
+    {
+      "slot": 120,
+      "note_index": 31,
+      "frequency": 336.37884521484375,
+      "duration": 0.15
+    },
+    {
+      "slot": 122,
+      "note_index": 30,
+      "frequency": 317.5280055999756,
+      "duration": 0.15
+    },
+    {
+      "slot": 124,
+      "note_index": 29,
+      "frequency": 282.8800449371338,
+      "duration": 0.15
+    }
+  ]
+}

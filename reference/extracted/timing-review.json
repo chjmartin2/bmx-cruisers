@@ -1,0 +1,13 @@
+{
+  "reference": "VICE 3.10 x64sc, original PAL snapshot, executable row hook $5300",
+  "sample_rows": 30,
+  "row_pixels": 8,
+  "seconds_per_row": 0.10112843284827429,
+  "pixels_per_second": 79.10732693744612,
+  "expert_speed_multiplier": 1.4,
+  "normal_is_pal_reference": true,
+  "ntsc_attempt": "Changing MachineVideoStandard reset the machine; the resulting run was not a valid game comparison and was not used.",
+  "disk_sha256": "9177346ca1e26f095f8f77ecd94d1bdbdf1496a5461a7d1f261fbe99f17c817e",
+  "source_ram_matches": true,
+  "source_io_matches": true
+}
