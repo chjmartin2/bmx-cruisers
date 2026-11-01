@@ -2,7 +2,8 @@
 
 // A common tyre/vehicle footprint for every cosmetic ride style. Contacts are
 // evaluated after presentation smoothing, so the visible bike is authoritative.
-bool ACruiserWorld::VisibleContact(FVector Position)const{
+bool ACruiserWorld::VisibleContact(FVector Position,bool* Water)const{
+ if(Water)*Water=false;
  constexpr float Radius=18,HalfWheelbase=55;
  auto Cross=[](FVector2D A,FVector2D B){return A.X*B.Y-A.Y*B.X;};
  for(float Offset:{-HalfWheelbase,0.f,HalfWheelbase}){
@@ -11,7 +12,7 @@ bool ACruiserWorld::VisibleContact(FVector Position)const{
   if(Waters)for(int Index:*Waters){const auto& T=WaterContacts[Index];
    if(!T.Bounds.IsInsideOrOn(P))continue;
    double A=Cross(T.B-T.A,P-T.A),B=Cross(T.C-T.B,P-T.B),C=Cross(T.A-T.C,P-T.C);
-   if((A>=0&&B>=0&&C>=0)||(A<=0&&B<=0&&C<=0))return true;
+   if((A>=0&&B>=0&&C>=0)||(A<=0&&B<=0&&C<=0)){if(Water)*Water=true;return true;}
   }
   const auto* Obstacles=ObstacleContactBuckets.Find(FMath::FloorToInt(P.X/300));
   if(Obstacles)for(int Index:*Obstacles){const auto& O=VisibleObstacles[Index];
@@ -21,9 +22,9 @@ bool ACruiserWorld::VisibleContact(FVector Position)const{
  }
  return false;
 }
-bool ACruiserWorld::SweepVisibleContact(FVector From,FVector To)const{
+bool ACruiserWorld::SweepVisibleContact(FVector From,FVector To,bool* Water)const{
  // Subdivide travel, not time: slow render frames cannot tunnel through a fence.
  int Steps=FMath::Max(1,FMath::CeilToInt(FVector::Dist2D(From,To)/10));
- for(int I=0;I<=Steps;++I)if(VisibleContact(FMath::Lerp(From,To,double(I)/Steps)))return true;
+ for(int I=0;I<=Steps;++I)if(VisibleContact(FMath::Lerp(From,To,double(I)/Steps),Water))return true;
  return false;
 }

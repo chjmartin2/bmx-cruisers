@@ -56,10 +56,15 @@ public:
     void SelectCourse(int32 Course,bool Start=false);
     bool Paused=false, Muted=false;
     bool EffectsMuted=false;
+    bool UsingController=false;
     int32 DifficultyIndex=BMX::RideSettings::Normal,ActiveDifficulty=BMX::RideSettings::Normal;
     TArray<int32> BestScores;
     double ActiveSpeed=1;
-    bool IsMenu()const{return Paused||Simulation->GetState()!=BMX::RunState::Riding;}
+    static constexpr float CrashHoldSeconds=1.8f;
+    float CrashTime=-1;
+    bool CrashWasWater=false;
+    bool IsCrashReacting()const{return Simulation->GetState()==BMX::RunState::Crashed&&CrashTime>=0&&CrashTime<CrashHoldSeconds;}
+    bool IsMenu()const{return !IsCrashReacting()&&(Paused||Simulation->GetState()!=BMX::RunState::Riding);}
     void StartRide();
     void RestartRide();
     void ReturnToTitle();
@@ -91,6 +96,8 @@ public:
     static FLinearColor SkinColor(int32 Index);
     void SavePreferences();
     float CelebrationTime=-1;
+    struct FCelebrationSpark{FVector A,B;FLinearColor Color;float Radius,Opacity;};
+    TArray<FCelebrationSpark> CelebrationSparks;
     float RideWarmupRemaining=0;
 private:
     UPROPERTY() TObjectPtr<USceneComponent> Scene;
@@ -109,7 +116,16 @@ private:
     UPROPERTY() TArray<TObjectPtr<USceneComponent>> Wildlife;
     UPROPERTY() TArray<TObjectPtr<UStaticMeshComponent>> Wings;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> Dust;
+    UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> CrashDroplets;
+    FVector CrashPosition=FVector::ZeroVector;
+    FRotator CrashHeading=FRotator::ZeroRotator;
+    float CrashSide=1;
+    uint64 CrashCycles=0;
+    int32 CrashScore=0;
+    bool CrashVerified=false,CrashCapture=false;
     UPROPERTY() TObjectPtr<UInstancedStaticMeshComponent> Fireworks;
+    enum {FireworkBursts=10,FireworkRays=96,FireworkTrail=4};
+    int32 MeadowGridVertices=0;
     UPROPERTY() TObjectPtr<UProceduralMeshComponent> Ripples;
     UPROPERTY() TArray<TObjectPtr<UAudioComponent>> NatureAudio;
     UPROPERTY() TArray<TObjectPtr<USoundWaveProcedural>> NatureStreams;
@@ -206,8 +222,10 @@ private:
     bool HaveContactPosition=false;
     int32 AnalogTestPhase=-1,AnalogStartX=0,AnalogStartY=0;
     bool AnalogTestGood=true;
-    bool VisibleContact(FVector Position)const;
-    bool SweepVisibleContact(FVector From,FVector To)const;
+    int32 ControllerTestPhase=-1;
+    bool ControllerButtonsGood=true;
+    bool VisibleContact(FVector Position,bool* Water=nullptr)const;
+    bool SweepVisibleContact(FVector From,FVector To,bool* Water=nullptr)const;
     float FenceGroundHeight(float X,float Y) const;
     void DressCourse(const TSharedPtr<class FJsonObject>& Data,const TSharedPtr<class FJsonObject>& Visual);
     void BuildRider();

@@ -7,6 +7,7 @@
 #include "EngineUtils.h"
 #include "GameFramework/PlayerController.h"
 #include "CanvasItem.h"
+#include "CanvasTypes.h"
 #include "Fonts/SlateFontInfo.h"
 #include "Fonts/CompositeFont.h"
 #include "Misc/Paths.h"
@@ -44,6 +45,15 @@ void ACruiserHUD::DrawHUD(){
   Rect(Width-3,0,3,1080,Red);Rect(Width-15,70,7,120,Yellow);
   for(int I=0;I<6;++I)Plate(38+I*22,1008,13,25,I<3?Red:Yellow,9);
  };
+ if(PlayerOwner&&Canvas->Canvas&&G->CelebrationTime>=0){
+  Canvas->Canvas->PushDepthSortKey(100);
+  for(const auto& Spark:G->CelebrationSparks){
+   FVector2D A,B,R;if(!PlayerOwner->ProjectWorldLocationToScreen(Spark.A,A)||!PlayerOwner->ProjectWorldLocationToScreen(Spark.B,B)||!PlayerOwner->ProjectWorldLocationToScreen(Spark.A+FVector(0,Spark.Radius,0),R))continue;
+   float Width=FMath::Clamp(float((R-A).Size()*1.2/L.DPI),.65f,4.5f);A/=L.DPI;B/=L.DPI;FVector2D D=B-A;if(D.IsNearlyZero())continue;FVector2D N(-D.Y,D.X);N.Normalize();
+   for(int Layer=0;Layer<3;++Layer){FLinearColor C=Spark.Color;C.A=Spark.Opacity*(Layer==0?.06f:Layer==1?.16f:.95f);FVector2D W=N*Width*.5f*(Layer==0?4:Layer==1?2:1);FCanvasTriangleItem First(A-W,A+W,B+W,GWhiteTexture),Second(A-W,B+W,B-W,GWhiteTexture);First.SetColor(C);Second.SetColor(C);First.BlendMode=Second.BlendMode=SE_BLEND_Translucent;Canvas->DrawItem(First);Canvas->DrawItem(Second);}
+  }
+  Canvas->Canvas->PopDepthSortKey();
+ }
  const auto State=G->Simulation->GetState();const bool Ready=State==BMX::RunState::Ready;
  if(Ready&&G->MenuPage==0){
   Art(TEXT("/Game/UI/Splash.Splash"),0,0,1920,1080);Rect(0,922,1920,158,FLinearColor(.005,.008,.02,.84));
@@ -104,14 +114,24 @@ void ACruiserHUD::DrawHUD(){
   }else{
    Plate(1130,851,660,147,Ink);Text(TEXT("READY TO RIDE"),1165,878,2.7,Yellow,true);Text(FString::Printf(TEXT("%s / BEST %06d"),G->VehicleName(G->VehicleStyle),G->HighScore),1168,941,1.1,Paper);
   }
-  Text(TEXT("ARROWS / TAB  SELECT    ENTER  CONFIRM    ESC  BACK"),55,1045,.83,Paper);
+  Text(G->UsingController?TEXT("D-PAD SELECT / ADJUST    A CONFIRM    B BACK    VIEW MAIN MENU"):TEXT("ARROWS / TAB  SELECT    ENTER  CONFIRM    ESC  BACK"),55,1045,.83,Paper);
  }else{
-  Plate(0,0,480,69,Ink);Plate(742,0,450,69,Ink);Plate(1450,0,470,69,Ink,0);Rect(0,67,1920,2,Red);
+  Rect(0,0,1920,69,FLinearColor(.055f,.060f,.065f,1));Rect(0,67,1920,2,Red);
   Text(FString::Printf(TEXT("SCORE  %06d"),(G->ScoreBase+G->Simulation->Score())),30,15,1.9,Paper,true);Text(FString::Printf(TEXT("COURSE %02d"),G->CourseIndex),828,15,1.9,Yellow,true);Text(FString::Printf(TEXT("HI  %06d"),G->HighScore),1580,15,1.9,Paper,true);
-  Rect(0,1041,1920,39,Ink);Text(TEXT("ARROWS / WASD  STEER     P / ESC  PAUSE     R  RESTART     C  CAMERA     PGUP / PGDN  TILT     + / -  ZOOM"),30,1051,.83,Dim);Text(G->DifficultyName(G->ActiveDifficulty),1720,1051,.88,Yellow,true);
-  if(!G->IsMenu()&&Time<G->ViewNoticeUntil){Plate(630,87,700,58,Ink);Text(FString::Printf(TEXT("VIEW  %.0f DEGREES / %.0f%%     HOME: RESET"),G->ViewTilt,G->ViewDistance),660,103,1.1,Yellow,true);}
+  Rect(0,1041,1920,39,Ink);Text(G->UsingController?TEXT("LEFT STICK / D-PAD  MOVE     MENU / START  PAUSE / RESUME     VIEW / BACK  MAIN MENU     A  SELECT     B  BACK"):TEXT("ARROWS / WASD  STEER     P / ESC  PAUSE     R  RESTART     C  CAMERA     PGUP / PGDN  TILT     + / -  ZOOM"),30,1051,.83,Dim);Text(G->DifficultyName(G->ActiveDifficulty),1720,1051,.88,Yellow,true);
+  if(!G->IsMenu()&&!G->IsCrashReacting()&&Time<G->ViewNoticeUntil){Plate(630,87,700,58,Ink);Text(FString::Printf(TEXT("VIEW  %.0f DEGREES / %.0f%%     HOME: RESET"),G->ViewTilt,G->ViewDistance),660,103,1.1,Yellow,true);}
   if(!G->IsMenu()&&G->RideWarmupRemaining>0){Plate(660,395,600,150,Ink);Text(TEXT("GET READY TO RIDE"),706,424,2.3,Yellow,true);Text(TEXT("FIND YOUR LINE. THE CLOCK STARTS AT GO."),708,490,.85,Paper);}
   if(!G->IsMenu()){Plate(30,90,430,44,Ink);Text(G->PlayingGame?TEXT("PLAY GAME / ONE LIFE"):TEXT("PRACTICE / UNLIMITED RETRIES"),48,102,.9,Yellow,true);}
+  if(G->IsCrashReacting()){
+   float T=G->CrashTime,Pulse=FMath::Exp(-T*5);
+   FLinearColor Accent=G->CrashWasWater?FLinearColor(.12f,.65f,1):Red;
+   // Keep the impact location visible. The result buttons appear only after
+   // the rider has fallen and the splash/dust has had time to read.
+   for(int I=0;I<8;++I){FLinearColor Edge=Accent;Edge.A=Pulse*.32f*(1-I/8.f);float W=12;Rect(I*W,69,W,972,Edge);Rect(1920-(I+1)*W,69,W,972,Edge);Rect(0,69+I*W,1920,W,Edge);Rect(0,1041-(I+1)*W,1920,W,Edge);}
+   Plate(695,160,530,130,Ink,25);Plate(695,160,530,6,Accent,6);
+   Text(G->CrashWasWater?TEXT("SPLASH!"):TEXT("CRASH!"),805,177,3.8,Paper,true);
+   Text(G->PlayingGame?TEXT("ONE LIFE. THIS RUN IS OVER."):TEXT("PRACTICE / GET READY TO TRY AGAIN"),750,254,.94,Dim);
+  }
   if(G->IsMenu()){
    bool Finished=State==BMX::RunState::Complete;float Top=Finished?345:200;Plate(480,Top,970,Finished?675:723,Ink,32);Plate(480,Top,970,7,Red,7);
    Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?(G->CourseIndex==5&&G->PlayingGame?TEXT("ALL FIVE CONQUERED!"):TEXT("COURSE CONQUERED!")):G->PlayingGame?TEXT("GAME OVER / ONE LIFE"):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);

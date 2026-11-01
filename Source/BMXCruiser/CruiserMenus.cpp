@@ -53,7 +53,7 @@ FString ACruiserWorld::MenuLabel(FName A)const{
     if(A==TEXT("title"))return TEXT("BACK TO START");
     if(A==TEXT("credits"))return TEXT("CREDITS");
     if(A==TEXT("quit"))return TEXT("QUIT TO DESKTOP");
-    if(A==TEXT("continue"))return TEXT("PRESS ENTER TO CONTINUE");
+    if(A==TEXT("continue"))return UsingController?TEXT("PRESS A TO CONTINUE"):TEXT("PRESS ENTER TO CONTINUE");
     return TEXT("BACK TO MAIN MENU");
 }
 void ACruiserWorld::MenuMove(int32 D){auto A=MenuActions();MenuFocus=(MenuFocus+D+A.Num())%A.Num();PlayEffect(TEXT("select"));}
@@ -97,7 +97,7 @@ void ACruiserWorld::MenuAction(FName A,int32 D){
     PlayEffect(TEXT("select"));
 }
 void ACruiserWorld::SavePreferences(){
-    if(ReplayInputs.Num()||FParse::Param(FCommandLine::Get(),TEXT("VerifyCampaign")))return;
+    if(ReplayInputs.Num()||FParse::Param(FCommandLine::Get(),TEXT("VerifyCampaign"))||FParse::Param(FCommandLine::Get(),TEXT("VerifyControllerButtons")))return;
     auto* Save=Cast<UCrusierSave>(UGameplayStatics::CreateSaveGameObject(UCrusierSave::StaticClass()));
     Save->CourseBestScores=CourseBestScores;Save->CampaignBestScores=CampaignBestScores;
     Save->CompletedRunBestScores=CampaignBestScores;
@@ -111,6 +111,24 @@ void ACruiserWorld::SavePreferences(){
 // assets. Cosmetic rebuilds must not change even one byte of simulation memory.
 void ACruiserWorld::VerifyAppearance(float Dt){
  VerificationTime+=Dt;
+ if(FParse::Param(FCommandLine::Get(),TEXT("VerifyCrashPresentation"))&&CrashTime>=0){
+  if(CrashTime>.6f&&CrashTime<2.05f&&!CrashCapture){
+   CrashCapture=true;auto WasPlaying=PlayingGame;
+   CrashVerified=IsCrashReacting()&&!IsMenu()&&Simulation->Cycles()==CrashCycles&&Simulation->Score()==CrashScore;
+   RestartRide();ReturnToTitle();
+   CrashVerified&=Simulation->GetState()==BMX::RunState::Crashed&&PlayingGame==WasPlaying&&Simulation->Cycles()==CrashCycles&&Simulation->Score()==CrashScore;
+   UE_LOG(LogTemp,Display,TEXT("CRASH HOLD AND INPUT GUARD %s"),CrashVerified?TEXT("PASSED"):TEXT("FAILED"));
+   FScreenshotRequest::RequestScreenshot(TEXT("Crash-reaction"),true,true);
+  }
+  if(CrashTime>2.05f&&CrashCapture){
+   bool Good=CrashVerified&&!IsCrashReacting()&&IsMenu()&&Simulation->GetState()==BMX::RunState::Crashed&&Simulation->Cycles()==CrashCycles&&Simulation->Score()==CrashScore;
+   Good&=PlayingGame?MenuActions().Contains(TEXT("game"))&&!MenuActions().Contains(TEXT("ride")):MenuActions().Contains(TEXT("ride"));
+   UE_LOG(LogTemp,Display,TEXT("CRASH PRESENTATION AND RESULT RULES %s: %s; hold %.2f; score %d"),Good?TEXT("PASSED"):TEXT("FAILED"),CrashWasWater?TEXT("splash"):TEXT("impact"),CrashTime,CrashScore);
+   FScreenshotRequest::RequestScreenshot(TEXT("Crash-results"),true,true);
+   // Allow the requested result screenshot to render before AutoQuit.
+   CrashCapture=false;
+  }
+ }
  if(FParse::Param(FCommandLine::Get(),TEXT("VerifyCampaign"))&&Simulation->GetState()==BMX::RunState::Complete&&CelebrationTime>3){
   if(CourseIndex<5){SelectCourse(CourseIndex+1,true);return;}
   const bool Qualified=BMX::RunRules::Qualifies(PlayingGame,CourseIndex,ClearedCourses,true,ActiveDifficulty,RunPace)&&ScoreBase+Simulation->Score()==1960;

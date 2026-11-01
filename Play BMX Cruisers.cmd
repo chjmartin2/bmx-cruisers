@@ -1,6 +1,18 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+if exist "Build\BridgeRails\Windows\BMXCruiser.exe" (
+  start "BMX Cruisers" "Build\BridgeRails\Windows\BMXCruiser.exe"
+  exit /b
+)
+if exist "Build\CrashFeedback\Windows\BMXCruiser.exe" (
+  start "BMX Cruisers" "Build\CrashFeedback\Windows\BMXCruiser.exe"
+  exit /b
+)
+if exist "Build\PolishedPark\Windows\BMXCruiser.exe" (
+  start "BMX Cruisers" "Build\PolishedPark\Windows\BMXCruiser.exe"
+  exit /b
+)
 if exist "Build\Release1.1Final\Windows\BMXCruiser.exe" (
   start "BMX Cruisers" "Build\Release1.1Final\Windows\BMXCruiser.exe"
   exit /b

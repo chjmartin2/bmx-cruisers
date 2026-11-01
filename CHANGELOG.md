@@ -1,5 +1,14 @@
 # Release history
 
+## 1.2.0 — 2026-11-01
+
+- Restored collision on bridge guardrails and posts, using their displayed thickness and the same rider footprint as other hazards.
+- Added a visible crash sequence: impact flash, a short fall and dust burst, or water spray and expanding splash rings. The scene remains visible for 1.8 seconds before result controls appear; the race and score stop immediately.
+- Rebuilt all five shorelines with continuous contour smoothing, a clipped meadow mesh and a sloping grass-to-wet-soil bank. Reeds and stones follow the curved shoreline; grass tufts stay clear of the wet edge. Water contacts use the displayed contour.
+- Replaced pastel firework blobs with large colored starbursts, white-hot heads, glowing trails, launch streaks and flickering embers.
+- Made the complete top status bar solid dark gray above the red line.
+- Added Xbox Menu/Start pause and resume, View/Back return to the main menu, and control hints that follow keyboard/controller use. Returning to the main menu ends a one-life run.
+
 ## 1.1.0 — 2026-11-01
 
 - Added the four remaining original courses, using the original loader/finish transitions and per-course native scroll timing.

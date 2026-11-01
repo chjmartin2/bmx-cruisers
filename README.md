@@ -2,13 +2,13 @@
 
 A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 logic for all five courses in a 3D park. The title is BMX Cruisers; the original BMX Racers is acknowledged in Credits.
 
-Version 1.1 includes all five original courses, analog-stick riding, visible-geometry collision and a brighter daytime park.
+Version 1.2 refines all five shorelines, adds vivid finish fireworks and visible crash reactions, and restores solid bridge guardrails. All five original courses, one-life play, unrestricted practice and controller riding are included.
 
-[Download Windows 1.1](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.1.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
+[Download Windows 1.2](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.2.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
 
-![Sunny Course Three with the restored boulder in version 1.1](preview/beta/sunny-course-three-1.1.png)
+![Smooth grass-to-water shorelines included in version 1.2](preview/beta/shoreline-1.2.png)
 
-![Play Game, Practice Courses and the high-score board in version 1.1](preview/beta/main-menu-1.1.png)
+![Vivid finish fireworks included in version 1.2](preview/beta/fireworks-1.2.png)
 
 ## Play
 
@@ -38,7 +38,7 @@ The game supports a fitted desktop window and single-monitor borderless fullscre
 | Garage orbit | Hold Q / E |
 | Garage zoom | + / - |
 
-Mouse actions and keyboard actions use the same menu routing. Ride with the left analog stick or D-pad as well as the keyboard. The D-pad and controller A/B also support menu navigation. Interactive rides pause when the game loses focus.
+Mouse actions and keyboard actions use the same menu routing. Ride with the left analog stick or D-pad as well as the keyboard. Xbox Menu/Start pauses and resumes; View/Back returns to the main menu and ends an active one-life run. The D-pad and controller A/B support menu navigation, with hints that follow the input device being used. Interactive rides pause when the game loses focus.
 
 ## Art and customization
 
@@ -87,11 +87,15 @@ The repository includes the prepared project assets except editable Epic templat
 - `tools/smooth_course.py`: regenerate smooth visual contours and the meadow mesh using local NumPy, Shapely and mapbox-earcut.
 - `tools/render_music.py`: regenerate the recovered-note guitar arrangement and sound effects.
 
-The smooth road's area differs from the source raster by about two percent. The original route and instructions remain unchanged; water contacts use the same interpolated surface shown on screen. White boulders that were previously mistaken for dirt patches now have visible rock models.
+The smooth road's area differs from the source raster by about two percent. The original route and instructions remain unchanged; water contacts use the same interpolated surface shown on screen. Shorelines use uniform-distance contour smoothing, a meadow clipped to the curve and a sloping grass-to-wet-soil blend. White boulders that were previously mistaken for dirt patches now have visible rock models.
 
 ## Verification
 
 `tools/test-core.cmd` checks the portable core: neutral collision at score 53, steering observations, render-rate-independent input, the original finish routine, and a complete collision-enabled replay at all five paces. It also checks continuous scroll presentation at 30/60/120 Hz. `tools/test-display.cmd` checks single-monitor bounds, DPI scaling, safe HUD bounds and click mapping.
+
+`tools/verify-crashes.ps1` runs real packaged boulder and water contacts at Normal, Cruise and Expert (including 4K). It verifies the 1.8-second crash presentation, blocked restart/menu actions during impact, frozen simulation cycles and score, and the correct practice/campaign result controls. It preserves player save and display settings.
+
+`tools/verify-crashes.ps1 -OnlyBridge` replays a deliberate Course One guardrail strike, checks a solid impact at score 127 and verifies the crash sequence. `-VerifyContacts` also probes interior bridge rails on every selected course, plus both rail strikes, a close parallel pass and an open centre lane on Course One. The pre-repair completion fixtures in `tests/replays/visible` clip some restored rails; they need re-recording before claiming a full rendered campaign replay pass with the repaired contacts. Native core completion checks remain separate.
 
 `tools/verify-living-park.ps1 -Name workshop-final` runs the actual packaged game: all six appearance invariants, all seven skin tones on both avatars, and complete Normal/Expert replays including native 4K. Appearance rebuilds must preserve every byte of simulation RAM, its cycle count and run state.
 

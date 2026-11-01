@@ -181,6 +181,43 @@ def scanned(name,asset,masked=False,world_uv=True):
     return result
 
 
+def shoreline_material():
+    m=material('Shoreline')
+    vertex=expression(m,ue.MaterialExpressionVertexColor)
+    alpha=expression(m,ue.MaterialExpressionMultiply,const_b=1);link(vertex,alpha,'A','A')
+    position=expression(m,ue.MaterialExpressionWorldPosition)
+    xy=expression(m,ue.MaterialExpressionComponentMask,r=True,g=True,b=False,a=False);link(position,xy)
+    def sample(asset,file,scale,normal=False):
+        tex=ue.load_asset(f'/Game/Textures/{asset}_{file}')
+        if not tex:raise RuntimeError(f'Missing shoreline texture {asset}_{file}')
+        s=expression(m,ue.MaterialExpressionTextureSample,texture=tex)
+        s.set_editor_property('sampler_type',ue.MaterialSamplerType.SAMPLERTYPE_NORMAL if normal else ue.MaterialSamplerType.SAMPLERTYPE_LINEAR_COLOR if file=='Rough' else ue.MaterialSamplerType.SAMPLERTYPE_COLOR)
+        link(mul(m,xy,scalar(m,scale)),s)
+        return s
+    grass=weather(m,sample('ambientcg-grass004','Diffuse',1/140),(.42,.69,.30),True)
+    soil=mul(m,sample('brown_mud_02','Diffuse',.012),color(m,(.52,.48,.40)))
+    output(mix(m,grass,soil,alpha),m,ue.MaterialProperty.MP_BASE_COLOR)
+    dry=add(m,scalar(m,.82),mul(m,sample('ambientcg-grass004','Rough',1/140),scalar(m,.14)))
+    wet=add(m,scalar(m,.30),mul(m,sample('brown_mud_02','Rough',.012),scalar(m,.28)))
+    output(mix(m,dry,wet,alpha),m,ue.MaterialProperty.MP_ROUGHNESS)
+    gn=mix(m,color(m,(0,0,1)),sample('ambientcg-grass004','nor_dx',1/140,True),scalar(m,.32))
+    sn=mix(m,color(m,(0,0,1)),sample('brown_mud_02','nor_dx',.012,True),scalar(m,.55))
+    normal=expression(m,ue.MaterialExpressionNormalize);link(mix(m,gn,sn,alpha),normal)
+    output(normal,m,ue.MaterialProperty.MP_NORMAL);output(mix(m,scalar(m,.12),scalar(m,.25),alpha),m,ue.MaterialProperty.MP_SPECULAR)
+    EDIT.recompile_material(m);ue.EditorAssetLibrary.save_loaded_asset(m)
+
+def firework_material():
+    m=material('FireworkStreak',(0,0,0),1)
+    m.set_editor_property('shading_model',ue.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property('blend_mode',ue.BlendMode.BLEND_ADDITIVE)
+    output(scalar(m,1),m,ue.MaterialProperty.MP_OPACITY)
+    channels=[expression(m,ue.MaterialExpressionPerInstanceCustomData,data_index=i) for i in range(4)]
+    rg=expression(m,ue.MaterialExpressionAppendVector);link(channels[0],rg,'A');link(channels[1],rg,'B')
+    rgb=expression(m,ue.MaterialExpressionAppendVector);link(rg,rgb,'A');link(channels[2],rgb,'B')
+    varying=expression(m,ue.MaterialExpressionVertexInterpolator);link(mul(m,rgb,channels[3]),varying)
+    output(varying,m,ue.MaterialProperty.MP_EMISSIVE_COLOR)
+    EDIT.recompile_material(m);ue.EditorAssetLibrary.save_loaded_asset(m)
+
 def model(asset,name):
     options=ue.FbxImportUI()
     options.set_editor_property('import_mesh',True)
@@ -338,6 +375,7 @@ def prepare():
     EDIT.recompile_material(cloud);ue.EditorAssetLibrary.save_loaded_asset(cloud)
     scanned('Grass','ambientcg-grass004');scanned('Asphalt','asphalt_01')
     bank=scanned('Bank','brown_mud_02');bank.set_editor_property('two_sided',True);ue.EditorAssetLibrary.save_loaded_asset(bank)
+    shoreline_material()
     verge=scanned('Verge','asphalt_01')
     verge.set_editor_property('blend_mode',ue.BlendMode.BLEND_TRANSLUCENT)
     verge.set_editor_property('translucency_lighting_mode',ue.TranslucencyLightingMode.TLM_SURFACE_PER_PIXEL_LIGHTING)
@@ -386,6 +424,7 @@ def prepare():
                 alpha=expression(m,ue.MaterialExpressionMultiply,const_b=.38);link(vertex,alpha,'A','A')
                 output(alpha,m,ue.MaterialProperty.MP_OPACITY)
         EDIT.recompile_material(m);ue.EditorAssetLibrary.save_loaded_asset(m)
+    firework_material()
     for file,name in [('bmx-cruisers-splash.png','Splash'),('bmx-cruisers-logo.png','Logo')]:
         tex=imported(ROOT/'assets/source/branding'/file,name,'/Game/UI')
         tex.set_editor_property('compression_settings',ue.TextureCompressionSettings.TC_EDITOR_ICON)
