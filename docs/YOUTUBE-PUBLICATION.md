@@ -1,25 +1,25 @@
-# YouTube publication package
+# YouTube publication package — version 1.2
 
-Video: `BMX-Cruisers-1.0-Beta-Trailer-1080p.mp4`
+Published November 1, 2026 on The RetroComputerist channel.
 
-Thumbnail: `YouTube-Thumbnail.jpg` (1280×720)
+Video: https://www.youtube.com/watch?v=GMSA1Eg3nrI
 
-Duration: 47 seconds. H.264, 1920×1080, 30 fps; AAC stereo, 48 kHz. No spoken narration. The edited music mix uses the game's authored guitar arrangement, ambience and finish effects.
+75 seconds. Native 4K Windows captures, 3840×2160 / 30 fps master; 1920×1080 sharing copy; H.264, AAC stereo, 48 kHz. Both final files passed full decode and stream verification. Original C64 footage was recorded in VICE at PAL timing. The upload passed YouTube’s initial copyright and Community Guidelines checks.
 
 ## Title
 
-BMX Cruisers — C64 BMX Racers Reimagined | 1.0 Beta Trailer
+BMX Cruisers | C64 to Unreal Engine 5 — Version 1.2 Trailer
 
 ## Description
 
-The C64 BMX Racers Course One challenge returns in a new Windows recreation built with Unreal Engine 5.
+Remember the ride? BMX Cruisers recreates the five original BMX Racers courses as a sunny 3D park for Windows, built with Unreal Engine 5.
 
-Ride through a 3D park with rippling ponds, moving foliage, wildlife and a centered camera you can adjust. Customize your rider, skin tone, outfit, helmet and vehicle color. Choose a BMX, cruiser, scooter, inline skates, quad skates or wheelchair — every style shares the same challenge.
+Play the courses in order with one life. Finish all five to qualify for the high-score board. Or choose Practice to learn any course with unlimited retries.
 
-Normal uses the original PAL instruction clock and recovered collision masks. Five pace settings change how quickly the course approaches while left/right steering keeps a consistent real-time rate.
+Customize your rider, skin tone, outfit, helmet and vehicle color. Choose BMX, cruiser, scooter, inline skates, quad skates or wheelchair: every cosmetic style shares the same gameplay. Use a keyboard, controller left stick or D-pad, select your pace, and adjust the centered elevated camera.
 
-Download the Windows 1.0 beta:
-https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.0.0-beta.1
+Download Windows version 1.2:
+https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.2.0
 
 Screenshots, controls and project details:
 https://retrocomputerist.com/projects/bmx-cruisers/
@@ -27,20 +27,18 @@ https://retrocomputerist.com/projects/bmx-cruisers/
 Source and feedback:
 https://github.com/chjmartin2/bmx-cruisers
 
-This is an unofficial recreation of BMX Racers, programmed by David Darling and Richard Darling and published by Mastertronic. This beta contains Course One only. No iOS or macOS build is included.
+The opening includes authentic Commodore 64 gameplay captured in VICE and original SID audio. Modern gameplay and garage shots come from the Windows game, captured at native 4K. The transformation, flying logo and impacts are editorial effects. The soundtrack combines the original SID capture with the game's synthesized electric-guitar/percussion arrangement and authored effects.
 
-All gameplay and garage footage is captured from the Windows beta. The music is a synthesized electric-guitar/percussion arrangement of the recovered melody. Cover-inspired title artwork and skin-color atlases use AI-generated art. Full engine, model, texture, audio and original-game credits are included with the game and source.
+Normal pace uses recovered PAL timing and movement. Modern collision follows the visible rider and obstacles. Other pace settings retain consistent real-time lateral steering.
 
-#BMXCruisers #Commodore64 #UnrealEngine
+An unofficial recreation of BMX Racers, programmed by David Darling and Richard Darling and published by Mastertronic. Original-game material appears for attribution and comparison. Cover-inspired branding and some texture assets use AI-generated art. Full original-game, engine, model, texture and audio credits are included with the game and source.
 
-## Suggested metadata
+#BMXCruisers #Commodore64 #UnrealEngine5
 
-Category: Gaming
+## Assets
 
-Language: English
+The 4K and 1080p MP4s, 1280×720 thumbnail, upload text, checksums and verification records are attached to the [1.2.0 release](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.2.0). Local copies are in `releases/1.2.0/media/`.
 
-Tags: BMX Cruisers, BMX Racers, Commodore 64, C64, Mastertronic, Unreal Engine 5, retro remake, Windows game, beta gameplay, retro gaming, The RetroComputerist
+Audience: not made for kids. Category: Gaming. No paid promotion. AI-use disclosure enabled; the description identifies the cover-inspired branding and texture assets. Embedding is enabled.
 
-Publication state: prepared for upload; this package does not imply a public YouTube post. Select the appropriate audience setting for the channel before publishing. No chapter list is needed for this short trailer.
-
-After publication, add the verified YouTube video ID to the website project record and replace its pending-video text. Keep the Windows download and screenshot gallery in place.
+The earlier [1.0 trailer](https://www.youtube.com/watch?v=xAQkwRoaF2U) remains an archive of Course One. The game ZIP and v1.2.0 tag are unchanged by this trailer publication.

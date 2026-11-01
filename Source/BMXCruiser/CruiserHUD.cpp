@@ -132,7 +132,7 @@ void ACruiserHUD::DrawHUD(){
    Text(G->CrashWasWater?TEXT("SPLASH!"):TEXT("CRASH!"),805,177,3.8,Paper,true);
    Text(G->PlayingGame?TEXT("ONE LIFE. THIS RUN IS OVER."):TEXT("PRACTICE / GET READY TO TRY AGAIN"),750,254,.94,Dim);
   }
-  if(G->IsMenu()){
+  if(G->IsMenu()&&!(State==BMX::RunState::Complete&&FParse::Param(FCommandLine::Get(),TEXT("TrailerFinish")))){
    bool Finished=State==BMX::RunState::Complete;float Top=Finished?345:200;Plate(480,Top,970,Finished?675:723,Ink,32);Plate(480,Top,970,7,Red,7);
    Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?(G->CourseIndex==5&&G->PlayingGame?TEXT("ALL FIVE CONQUERED!"):TEXT("COURSE CONQUERED!")):G->PlayingGame?TEXT("GAME OVER / ONE LIFE"):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);
    Text(G->Paused?(G->PlayingGame?TEXT("Resume this run, or abandon it and start again."):TEXT("Find your pace. Then find your line.")):G->PlayingGame?(Finished?(G->CourseIndex==5?TEXT("One life. All five. Your finish qualifies for the board."):TEXT("Still one life. Continue to keep your run alive.")):TEXT("This run ends here. The next game starts at Course One.")):TEXT("PRACTICE / unlimited retries / no high-score qualification"),534,Top+104,1.15,Dim);

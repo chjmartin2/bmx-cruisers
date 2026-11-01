@@ -1,8 +1,10 @@
-# BMX Cruisers 1.2 — proposed trailer script
+# BMX Cruisers 1.2 — trailer script
 
-Duration: approximately 75 seconds. Text-led, without narration. A 4K master and a 1080p sharing copy. Status: script for owner review; video production has not started.
+Duration: 75 seconds. Text-led, without narration. A 4K master and a 1080p sharing copy. Status: approved by the owner and produced on November 1, 2026. Final videos, thumbnail, upload description and verification reports are in `releases/1.2.0/media/`.
 
-All game footage will be captured from the original C64 game running in an emulator and the current Windows executable. The opening transformation and flying logo are editorial effects. Feature shots show the actual game.
+Published video: https://www.youtube.com/watch?v=GMSA1Eg3nrI
+
+All game footage was captured from the original C64 game running in an emulator and the current Windows executable. The opening transformation and flying logo are editorial effects. Feature shots show the actual game.
 
 | Time | Picture and action | On-screen words | Sound |
 | --- | --- | --- | --- |

@@ -6,6 +6,10 @@ Version 1.2 refines all five shorelines, adds vivid finish fireworks and visible
 
 [Download Windows 1.2](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.2.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
 
+[![Watch the version 1.2 trailer: Commodore 64 to Unreal Engine 5](preview/beta/trailer-1.2.jpg)](https://www.youtube.com/watch?v=GMSA1Eg3nrI)
+
+[Watch the 1.2 trailer](https://www.youtube.com/watch?v=GMSA1Eg3nrI) · [Download 4K MP4](https://github.com/chjmartin2/bmx-cruisers/releases/download/v1.2.0/BMX-Cruisers-1.2-Trailer-4K.mp4) · [Download 1080p MP4](https://github.com/chjmartin2/bmx-cruisers/releases/download/v1.2.0/BMX-Cruisers-1.2-Trailer-1080p.mp4)
+
 ![Smooth grass-to-water shorelines included in version 1.2](preview/beta/shoreline-1.2.png)
 
 ![Vivid finish fireworks included in version 1.2](preview/beta/fireworks-1.2.png)
@@ -121,4 +125,4 @@ Play Game starts at Course One with one life. A crash ends the run, and restarti
 
 The original row loader and finish routine determine the course boundaries and native movement settings. Finish scroll counts are 210, 250, 375, 500 and 625. The later stages begin with the actual post-finish screen and loader state recovered from the original. The HUD score carries forward when continuing between courses; direct selection starts a new score. Per-course records remain separate.
 
-Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. Supply -BuildPath and -ReplayDirectory for a custom packaged folder and modern-geometry fixtures. The original 1.0 trailer shows the earlier Course One release.
+Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. Supply -BuildPath and -ReplayDirectory for a custom packaged folder and modern-geometry fixtures. The version 1.2 trailer opens with authentic C64 emulator footage and shows the current Windows presentation. The archived 1.0 trailer shows the earlier Course One release.

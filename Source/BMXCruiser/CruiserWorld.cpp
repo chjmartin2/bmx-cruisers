@@ -1,4 +1,7 @@
 #include "CruiserWorld.h"
+#include "IImageWrapperModule.h"
+#include "IImageWrapper.h"
+#include "Modules/ModuleManager.h"
 #include "CruiserHUD.h"
 #include "Core/RunRules.h"
 #include "Camera/CameraComponent.h"
@@ -105,6 +108,8 @@ void ACruiserWorld::BeginPlay() {
         VideoCaptureDirectory=FPaths::ConvertRelativePathToFull(VideoCaptureDirectory);
         IFileManager::Get().MakeDirectory(*VideoCaptureDirectory,true);
         FApp::SetFixedDeltaTime(1.0/30.0);FApp::SetUseFixedTimeStep(true);
+        FParse::Value(FCommandLine::Get(),TEXT("CaptureStart="),VideoCaptureStart);
+        UGameViewportClient::OnScreenshotCaptured().AddUObject(this,&ACruiserWorld::SaveVideoFrame);
     }
     InitializeDisplay();
     TArray<uint8> RAM,IO;
@@ -138,7 +143,11 @@ void ACruiserWorld::BeginPlay() {
     FParse::Value(FCommandLine::Get(),TEXT("Gender="),Gender);Gender=FMath::Clamp(Gender,0,1);
     FParse::Value(FCommandLine::Get(),TEXT("Outfit="),Outfit);Outfit=FMath::Clamp(Outfit,0,1);
     FParse::Value(FCommandLine::Get(),TEXT("SkinTone="),SkinTone);SkinTone=FMath::Clamp(SkinTone,0,6);
+    FParse::Value(FCommandLine::Get(),TEXT("HelmetColor="),HelmetColor);HelmetColor=FMath::Clamp(HelmetColor,0,7);
+    FParse::Value(FCommandLine::Get(),TEXT("BikeColor="),BikeColor);BikeColor=FMath::Clamp(BikeColor,0,7);
     FParse::Value(FCommandLine::Get(),TEXT("MenuPage="),MenuPage);
+    FParse::Value(FCommandLine::Get(),TEXT("MenuFocus="),MenuFocus);
+    if(!VideoCaptureDirectory.IsEmpty())UsingController=FParse::Param(FCommandLine::Get(),TEXT("TrailerController"));
     FParse::Value(FCommandLine::Get(),TEXT("PreviewOrbit="),PreviewOrbit);
     FParse::Value(FCommandLine::Get(),TEXT("PreviewZoom="),PreviewZoom);PreviewZoom=FMath::Clamp(PreviewZoom,.50f,1.15f);
     BuildRider();CreateLighting();
@@ -711,10 +720,22 @@ void ACruiserWorld::Tick(float DeltaSeconds) {
         PedalPhase+=(Now-Before)*8;
     }
     PoseHumanRider();
+    if(!VideoCaptureDirectory.IsEmpty()&&FParse::Param(FCommandLine::Get(),TEXT("TrailerCamera")))ViewTilt=FMath::Lerp(32.f,57.f,FMath::Clamp((VerificationTime-4)/6,0.f,1.f));
     UpdateLivingPark(DeltaSeconds);UpdateAudio();VerifyAppearance(DeltaSeconds);
     if(FParse::Param(FCommandLine::Get(),TEXT("CaptureMenu"))&&!MenuCaptured){MenuCaptureDelay+=DeltaSeconds;if(MenuCaptureDelay>3){MenuCaptured=true;FScreenshotRequest::RequestScreenshot(TEXT("BMXCruiser-title"),true,true);}}
-    if(!VideoCaptureDirectory.IsEmpty()&&(!FParse::Param(FCommandLine::Get(),TEXT("CaptureFinishOnly"))||CelebrationTime>=0)){
-        FScreenshotRequest::RequestScreenshot(VideoCaptureDirectory/FString::Printf(TEXT("frame-%06d.png"),VideoCaptureFrame++),true,false);
+    if(!VideoCaptureDirectory.IsEmpty()&&VerificationTime>=VideoCaptureStart&&(!FParse::Param(FCommandLine::Get(),TEXT("CaptureFinishOnly"))||CelebrationTime>=0)){
+        FScreenshotRequest::RequestScreenshot(VideoCaptureDirectory/FString::Printf(TEXT("frame-%06d.jpg"),VideoCaptureFrame++),true,false);
+    }
+}
+
+void ACruiserWorld::SaveVideoFrame(int32 Width,int32 Height,const TArray<FColor>& Pixels){
+    // Opt-in film capture only. Avoid synchronous PNG compression of every 4K
+    // frame; normal play and ordinary screenshots retain their original path.
+    auto& Codec=FModuleManager::LoadModuleChecked<IImageWrapperModule>(TEXT("ImageWrapper"));
+    auto Image=Codec.CreateImageWrapper(EImageFormat::JPEG);
+    if(Image->SetRaw(Pixels.GetData(),int64(Pixels.Num())*sizeof(FColor),Width,Height,ERGBFormat::BGRA,8)){
+        auto Data=Image->GetCompressed(95);
+        FFileHelper::SaveArrayToFile(Data,*FPaths::ChangeExtension(FScreenshotRequest::GetFilename(),TEXT("jpg")));
     }
 }
 

@@ -6,7 +6,7 @@ public class BMXCruiser : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Json", "JsonUtilities", "ProceduralMeshComponent", "SlateCore", "RenderCore" });
         if (Target.bBuildEditor) PrivateDependencyModuleNames.AddRange(new string[] { "AssetRegistry", "MeshDescription", "StaticMeshDescription" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "ApplicationCore" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "ApplicationCore", "ImageWrapper" });
     }
 }
 

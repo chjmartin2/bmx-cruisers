@@ -20,6 +20,6 @@ Native simulation checks cover all five courses and original timing. Display che
 
 This remains a Windows development build with limited hardware coverage. Rider animation, some materials and close garage shadows can improve. Target: Windows 10/11 x64 and a DirectX 12 / Shader Model 6 capable GPU. No iOS, macOS or multiplayer build is included.
 
-The existing online trailer shows the earlier 1.0 release. A replacement trailer is being scripted; the current screenshots show the refined presentation.
+The [version 1.2 trailer](https://www.youtube.com/watch?v=GMSA1Eg3nrI) opens with authentic C64 emulator gameplay and transforms into the Windows course. It shows the five courses, Practice, six ride styles, controls, camera options and finish celebrations. The release includes 4K and 1080p MP4 downloads and trailer checksums. The original Windows ZIP is unchanged.
 
 Original BMX Racers: David Darling and Richard Darling, Mastertronic. This is an unofficial recreation. Full third-party acknowledgements are included.

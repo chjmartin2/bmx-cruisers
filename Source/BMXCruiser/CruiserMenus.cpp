@@ -111,6 +111,10 @@ void ACruiserWorld::SavePreferences(){
 // assets. Cosmetic rebuilds must not change even one byte of simulation memory.
 void ACruiserWorld::VerifyAppearance(float Dt){
  VerificationTime+=Dt;
+ if(!VideoCaptureDirectory.IsEmpty()&&FParse::Param(FCommandLine::Get(),TEXT("TrailerRetry"))&&!PlayingGame&&CrashTime>2.6f&&TrailerRetries==0){
+  ++TrailerRetries;RestartRide();ReplayIndex=0;ReplayCycles=0;ReplayBudget=0;ReplayDelay=2;
+  UE_LOG(LogTemp,Display,TEXT("TRAILER PRACTICE RETRY captured through normal restart"));
+ }
  if(FParse::Param(FCommandLine::Get(),TEXT("VerifyCrashPresentation"))&&CrashTime>=0){
   if(CrashTime>.6f&&CrashTime<2.05f&&!CrashCapture){
    CrashCapture=true;auto WasPlaying=PlayingGame;

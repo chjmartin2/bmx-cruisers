@@ -188,7 +188,10 @@ private:
     TArray<uint8> RollingPCM,AmbiencePCM;
     double LastWallTime=0,RideWallStart=0;
     FString VideoCaptureDirectory;
+    float VideoCaptureStart=0;
+    int32 TrailerRetries=0;
     int32 VideoCaptureFrame=0;
+    void SaveVideoFrame(int32 Width,int32 Height,const TArray<FColor>& Pixels);
     float MenuCaptureDelay=0;
     bool MenuCaptured=false,PreviousMenuLeft=false,PreviousMenuRight=false;
     bool MenuInputActive=false;
