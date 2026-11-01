@@ -4,6 +4,10 @@ A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 Course
 
 [Download the Windows beta](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.0.0-beta.1) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
 
+![Course One running in the Windows beta](preview/beta/course-one.png)
+
+![Rider Garage in the Windows beta](preview/beta/rider-garage.png)
+
 ## Play
 
 For the release ZIP, extract everything and run **BMXCruiser.exe**. See [installation and beta limitations](docs/RELEASE-1.0-BETA.md). In a development checkout, open **Play BMX Cruisers.cmd**, or run `Build/Windows/BMXCruiser.exe`. Keep the whole Windows build folder together. The compatibility launcher **Play BMX Cruiser.cmd** forwards to the new name.
