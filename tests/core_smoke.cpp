@@ -7,12 +7,21 @@
 #include <string>
 #include <cmath>
 #include "Core/RideSettings.h"
+#include "Core/RunRules.h"
 
 static std::vector<uint8_t> Read(const char* path) {
     std::ifstream file(path,std::ios::binary);
     return std::vector<uint8_t>(std::istreambuf_iterator<char>(file),{});
 }
 int main() {
+    for(int course=1;course<=5;++course)for(int cleared=0;cleared<5;++cleared){
+        assert(!BMX::RunRules::Qualifies(false,course,cleared,true,2,2));
+        assert(!BMX::RunRules::Qualifies(true,course,cleared,false,2,2));
+        assert(!BMX::RunRules::Qualifies(true,course,cleared,true,0,2));
+        assert(BMX::RunRules::Qualifies(true,course,cleared,true,2,2)==(course==5&&cleared==4));
+        assert(BMX::RunRules::CanContinue(true,course,cleared,true)==(course<5&&cleared==course-1));
+        assert(!BMX::RunRules::CanContinue(true,course,cleared,false));
+    }
     auto ram=Read("reference/extracted/course1-initial-ram.bin");
     auto io=Read("reference/extracted/course1-initial-io.bin");
     BMX::OriginalSimulation sim;

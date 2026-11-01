@@ -1,6 +1,6 @@
 # All five courses
 
-The development build includes all five course sequences recovered from BMX Racers. Select **Choose Course** from the main menu to practice any course. After a finish, **Continue to Course N** opens the next course and starts the ride; **Ride Again** retries the current course. The fifth course has a final completion message.
+Version 1.1 includes all five course sequences recovered from BMX Racers. **Play Game** starts at Course One with one life: a crash ends the run. Only completing all five courses in order on an unchanged pace qualifies for the **High Score Board**. **Practice Courses** allows any selected course and unlimited retries, without high-score qualification. The fifth course has a final completion message.
 
 Continuing between courses accumulates the score in the HUD. Direct course selection begins a new score. Best scores are retained per course and pace, with separate overall records for continued rides. Existing Course One records migrate from the 1.0 save format.
 
@@ -12,7 +12,7 @@ Continuing between courses accumulates the score in the HUD. Direct course selec
 | 4 | 33 | 500 | 40 |
 | 5 | 53 | 625 | 32 |
 
-The extraction walks the original row loader at $C412 and the finish routine at $5500. Each later snapshot retains the post-finish map, loader pointer, course counter and movement settings. The six score digits are cleared for independent course tests; the presentation carries the preceding score during continuous play. Original collision masks and joystick bounds remain authoritative.
+The extraction walks the original row loader at $C412 and the finish routine at $5500. Each later snapshot retains the post-finish map, loader pointer, course counter and movement settings. The six score digits are cleared for independent course tests; the presentation carries the preceding score during continuous play. Joystick bounds remain original. Modern contacts follow the displayed rider and visible scenery; -OriginalCollision retains reference pixel-mask checks.
 
 Each course has its own terrain mask, source RAM/I/O, smoothed road/water/bank meshes, meadow heights, scenery and finish panels. The established rider customization, camera controls, pace settings, environmental effects and guitar arrangement apply to all five. Original PAL timing includes the native increase in scrolling speed between courses, in addition to the chosen pace multiplier.
 

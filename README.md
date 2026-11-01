@@ -2,17 +2,17 @@
 
 A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 logic for all five courses in a 3D park. The title is BMX Cruisers; the original BMX Racers is acknowledged in Credits.
 
-The local development build includes all five courses. The published 1.0 download below contains Course One.
+Version 1.1 includes all five original courses, analog-stick riding, visible-geometry collision and a brighter daytime park.
 
-[Download the Windows beta](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.0.0-beta.1) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
+[Download Windows 1.1](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.1.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
 
-![Course One running in the Windows beta](preview/beta/course-one.png)
+![Sunny Course Three with the restored boulder in version 1.1](preview/beta/sunny-course-three-1.1.png)
 
-![Rider Garage in the Windows beta](preview/beta/rider-garage.png)
+![Play Game, Practice Courses and the high-score board in version 1.1](preview/beta/main-menu-1.1.png)
 
 ## Play
 
-For the release ZIP, extract everything and run **BMXCruiser.exe**. See [installation and beta limitations](docs/RELEASE-1.0-BETA.md). In a development checkout, open **Play BMX Cruisers.cmd**, or run `Build/Windows/BMXCruiser.exe`. Keep the whole Windows build folder together. The compatibility launcher **Play BMX Cruiser.cmd** forwards to the new name.
+For the release ZIP, extract everything and run **BMXCruiser.exe**. See [installation, controls and limitations](docs/PLAY.md). In a development checkout, open **Play BMX Cruisers.cmd**. Keep the whole Windows build folder together. The compatibility launcher **Play BMX Cruiser.cmd** forwards to the new name.
 
 The game supports a fitted desktop window and single-monitor borderless fullscreen. F11 toggles between them. Picture detail (1080p or 4K) changes the scene render target without enlarging the desktop window or spanning multiple displays. A shared logical HUD layout preserves text and mouse alignment at different DPI settings and aspect ratios.
 
@@ -38,7 +38,7 @@ The game supports a fitted desktop window and single-monitor borderless fullscre
 | Garage orbit | Hold Q / E |
 | Garage zoom | + / - |
 
-Mouse actions and keyboard actions use the same menu routing. The D-pad and controller A/B also support menu navigation. Interactive rides pause when the game loses focus.
+Mouse actions and keyboard actions use the same menu routing. Ride with the left analog stick or D-pad as well as the keyboard. The D-pad and controller A/B also support menu navigation. Interactive rides pause when the game loses focus.
 
 ## Art and customization
 
@@ -63,15 +63,15 @@ The source disk remains unchanged. SHA-256:
 
 The original screen sequence is **3, 4, 3, 5, 4, 6, 5, 7**. The source row loader determines the stream, including duplicated transition rows. Course completion fires at score/scroll 210. The exported view includes 24 initial rows and 209 inserted rows before the finish trigger.
 
-The portable adapter executes recovered 6502 instructions and retains original character/sprite collision masks. It implements the subset of VIC/CIA/Kernal services used by this game; it is not a complete cycle-exact C64 emulator. No Commodore system ROMs are included in the shipped game data. Full behavioral equivalence beyond the tested comparisons remains unproven.
+The portable adapter executes recovered 6502 instructions. Modern play checks a common vehicle footprint at the displayed rider position against visible obstacles and interpolated shorelines, sweeping between frames to prevent tunneling. Shrub boundaries are inset from their outer leaves. Decorative wear and shoreline dressing are nonblocking. Original character/sprite masks remain available with `-OriginalCollision` for reference tests. The adapter implements the subset of VIC/CIA/Kernal services used by this game; it is not a complete cycle-exact C64 emulator. No Commodore system ROMs are included in the shipped game data.
 
 Normal runs the original PAL instruction simulation at 1.0x. Cruise, Relaxed, Fast and Expert run it at 65%, 80%, 120% and 140%. Scores are stored separately for each pace. Changing pace during a paused ride applies on restart. Real elapsed time drives the simulation, so slow render frames do not silently slow the race.
 
-Left/right steering keeps Normal's real-time movement rate at every pace. Slower modes give more time to avoid obstacles without sluggish steering; faster modes bring obstacles sooner without also accelerating steering. Normal's original movement, timing and collision behavior remain unchanged. Other paces compensate rider-only lateral steps inside the simulation and sweep added steps through the original collision masks. Up/down movement retains the original per-pace behavior. The finish checkerboard conforms to the meadow triangles with two centimetres of clearance; grass tufts are excluded around its edges.
+Left/right steering keeps Normal's real-time movement rate at every pace. Slower modes give more time to avoid obstacles without sluggish steering; faster modes bring obstacles sooner without also accelerating steering. Normal's original movement and timing remain unchanged; contacts follow modern visible geometry. Up/down movement retains the original per-pace behavior. The finish checkerboard conforms to the meadow triangles with two centimetres of clearance; grass tufts are excluded around its edges.
 
 A fresh VICE 3.10 measurement recorded 30 PAL rows: mean 0.10112843285 seconds per eight-pixel row. The native core and the older independent 20-row VICE fixture differ by roughly one percent. See `reference/extracted/timing-review.json`, `timing-fresh.json` and its monitor transcript. Changing the emulator's video-standard resource reset the machine; that attempted NTSC run is invalid and was not used for calibration.
 
-The camera remains centered on the course during play at an elevated 40-degree angle; the rider moves freely within its wider frame. Continuous scroll reconstruction and rider animation smooth the source game's discrete row movement. Presentation can lead the discrete source position by part of one tile; original collision remains authoritative.
+The camera remains centered on the course during play at an elevated 40-degree angle; the rider moves freely within its wider frame. Continuous scroll reconstruction and rider animation smooth the source game's discrete row movement. Contact checks use this displayed position. A short Get Ready interval holds the race clock while course rendering settles. Ripple geometry is reused between frames and hidden fireworks are not animated during riding.
 
 ## Build and asset authoring
 
@@ -79,7 +79,7 @@ Use Unreal Engine 5.8 plus Microsoft C++ Build Tools 2022 and a Windows SDK. Run
 
 `tools/build.ps1 -EnginePath 'C:/Program Files/Epic Games/UE_5.8' -Package`
 
-The repository includes the prepared project assets except editable Epic template derivatives. On a fresh checkout, the build restores the head from your installed UE 5.8 MetaHumanCharacter/MetaHuman plugins; these plugins must be installed. Raw downloaded authoring sources are excluded. A complete art regeneration with -PrepareAssets also requires the source files recorded in the asset manifests. The asset preparation commandlet imports scanned scenery, authored equipment and refined riders, constructs material graphs and saves the shared park level that the runtime dresses. The packaged output is `Build/Windows/BMXCruiser.exe`. The project opens through `BMXCruiser.uproject`.
+The repository includes the prepared project assets except editable Epic template derivatives. On a fresh checkout, the build restores the head from your installed UE 5.8 MetaHumanCharacter/MetaHuman plugins; these plugins must be installed. Raw downloaded authoring sources are excluded. A complete art regeneration with -PrepareAssets also requires the source files recorded in the asset manifests. The asset preparation commandlet imports scanned scenery, authored equipment and refined riders, constructs material graphs and saves the shared park level that the runtime dresses. The build prints the actual packaged Windows folder; use -Destination for a separate archive directory. The launcher detects the local 1.1 package or the default UAT Windows output. The project opens through `BMXCruiser.uproject`.
 
 - `tools/author_equipment.py`: regenerate the OBJ/MTL equipment sources and inventory.
 - `tools/refine_riders.py`: create refined FBX derivatives without altering the original avatar files.
@@ -87,7 +87,7 @@ The repository includes the prepared project assets except editable Epic templat
 - `tools/smooth_course.py`: regenerate smooth visual contours and the meadow mesh using local NumPy, Shapely and mapbox-earcut.
 - `tools/render_music.py`: regenerate the recovered-note guitar arrangement and sound effects.
 
-The smooth road's area differs from the source raster by about two percent. The original raster collision and game instructions remain unchanged, so narrow visual/collision differences can occur at curved edges.
+The smooth road's area differs from the source raster by about two percent. The original route and instructions remain unchanged; water contacts use the same interpolated surface shown on screen. White boulders that were previously mistaken for dirt patches now have visible rock models.
 
 ## Verification
 
@@ -111,10 +111,10 @@ Asset provenance and licenses: [assets/CREDITS.md](assets/CREDITS.md). Additiona
 
 The riding camera follows the course scroll at a fixed lateral center. Up/Down moves the rider through the frame as on the C64; Left/Right also remains visible within the trail width. The default elevated 40-degree view uses a 52-degree field of view, 23 metres behind the scroll origin and 24.5 metres above it. Players can set tilt from 30 to 75 degrees and distance from 90% to 140%, in five-unit steps. C opens a live course preview and pauses an active ride; the same controls are in Picture & Sound and the pause menu. Page Up/Page Down, +/-, and Home also work during a ride. Tilt and distance are saved independently of character customization. Garage orbit and zoom are independent.
 
-## All five courses (1.1 beta development build)
+## All five courses (1.1)
 
-Choose Course opens all five original courses. Finish a course and choose Continue to move directly to the next. Ride Again retries the current course; the final finish screen celebrates completion of Course Five. Each course has separate best scores for all five pace settings. Existing Course One scores migrate automatically.
+Play Game starts at Course One with one life. A crash ends the run, and restarting returns to Course One. Continue through all five courses in order on the same pace to qualify for the High Score Board. Practice Courses opens any course with unlimited retries and cannot qualify for that board. Existing course practice scores are retained separately; older records that allowed retries are excluded from the new board.
 
 The original row loader and finish routine determine the course boundaries and native movement settings. Finish scroll counts are 210, 250, 375, 500 and 625. The later stages begin with the actual post-finish screen and loader state recovered from the original. The HUD score carries forward when continuing between courses; direct selection starts a new score. Per-course records remain separate.
 
-Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. The public 1.0 download and trailer still describe the earlier Course One release until a new release is published.
+Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. Supply -BuildPath and -ReplayDirectory for a custom packaged folder and modern-geometry fixtures. The original 1.0 trailer shows the earlier Course One release.

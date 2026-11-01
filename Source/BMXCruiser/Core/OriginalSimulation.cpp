@@ -120,6 +120,8 @@ bool OriginalSimulation::BackgroundSolid(int x, int y) const {
 }
 
 void OriginalSimulation::CheckRasterCollision(int line) {
+    if(Contacts){if(line==SpriteY()+10){for(double F:{0.,30.,60.})for(double S:{-15.,0.,15.})if(Contacts->Hit(ForwardPixels()*7.5+F,RightPixels()*7.5+S)){Collision|=1;return;}}return;}
+    if(!OriginalCollision)return;
     if (!(IO[0x15]&1)) return;
     int row=line-SpriteY();
     const bool expandY=(IO[0x17]&1)!=0;

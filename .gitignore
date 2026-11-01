@@ -4,7 +4,7 @@ Binaries/
 Intermediate/
 Saved/
 DerivedDataCache/
-Build/Windows/
+Build/
 tests/bin/
 reference/extracted/*.vsf
 reference/extracted/*.log

@@ -48,6 +48,12 @@ void ACruiserWorld::DressCourse(const TSharedPtr<FJsonObject>& Data,const TShare
         int Code=P->GetIntegerField(TEXT("code"));bool Bridge=P->GetBoolField(TEXT("bridge"));
         bool H=Code==74||Code==77||Code==78||Code==79||Code==82;
         bool V=Code==72||Code==73||Code==75||Code==76||Code==80||Code==81||Code==83||Bridge;
+        if(!Bridge){
+            auto Contact=[&](FVector2D A,FVector2D B,float Radius){FVisibleObstacle O;O.A=A;O.B=B;O.Radius=FVector2D(Radius);VisibleObstacles.Add(O);};
+            if(H)Contact(FVector2D(X,Y-30),FVector2D(X,Y+30),3);
+            if(V)Contact(FVector2D(X-30,Y),FVector2D(X+30,Y),3);
+            if(Code!=77)Contact(FVector2D(X,Y),FVector2D(X,Y),5);
+        }
         // Original endpoints and openings are retained. Only the timber surface varies.
         float Low=36+Random.FRandRange(-1.5,1.5),High=68+Random.FRandRange(-2,2);
         if(H)for(float Z:{Low,High})Wood(FVector(X,Y-30,FenceGroundHeight(X,Y-30)+Z),FVector(X,Y+30,FenceGroundHeight(X,Y+30)+Z+Random.FRandRange(-1,1)),4);

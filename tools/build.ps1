@@ -1,4 +1,4 @@
-param([string]$EnginePath = '', [switch]$Package, [switch]$PrepareAssets)
+param([string]$EnginePath = '', [switch]$Package, [switch]$PrepareAssets,[string]$Destination='')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $projectFile = Join-Path $projectRoot 'BMXCruiser.uproject'
@@ -28,9 +28,10 @@ if ($PrepareAssets -or !(Test-Path -LiteralPath $assetMarker)) {
 }
 if ($Package) {
     $automation = Join-Path $EnginePath 'Engine/Build/BatchFiles/RunUAT.bat'
-    $destination = Join-Path $projectRoot 'Build/Windows'
+    if(!$Destination){$Destination = Join-Path $projectRoot 'Build/Windows'}
     & $automation BuildCookRun "-project=$projectFile" -noP4 -platform=Win64 -clientconfig=Development -build -cook -stage -pak -archive "-archivedirectory=$destination" -utf8output
     if ($LASTEXITCODE -ne 0) { throw 'The Windows packaging step failed.' }
+    if(Test-Path -LiteralPath (Join-Path $destination 'Windows/BMXCruiser.exe')){$destination=Join-Path $destination 'Windows'}
     Copy-Item -LiteralPath (Join-Path $projectRoot 'assets/CREDITS.md') -Destination (Join-Path $destination 'CREDITS.txt') -Force
     Copy-Item -LiteralPath (Join-Path $projectRoot 'assets/source/rocketbox/LICENSE.md') -Destination (Join-Path $destination 'LICENSE-Rocketbox.txt') -Force
     Copy-Item -LiteralPath (Join-Path $EnginePath 'Engine/Source/ThirdParty/Licenses/ROBOTO_License.txt') -Destination (Join-Path $destination 'LICENSE-Roboto.txt') -Force

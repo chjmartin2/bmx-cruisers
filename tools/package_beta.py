@@ -14,7 +14,7 @@ for path in source.rglob('*'):
     if not path.is_file(): continue
     rel = path.relative_to(source)
     if any(part.lower() in {'saved', 'intermediate', 'metadata'} for part in rel.parts): continue
-    if path.suffix.lower() in {'.pdb', '.log', '.dmp', '.sav', '.txt'} and path.name not in {'CREDITS.txt', 'LICENSE-Rocketbox.txt', 'LICENSE-Roboto.txt'}: continue
+    if path.suffix.lower() in {'.pdb', '.log', '.dmp', '.sav', '.txt'} and path.name not in {'CREDITS.txt', 'LICENSE-Rocketbox.txt', 'LICENSE-Roboto.txt', 'NOTICES.txt'}: continue
     target = STAGE / rel
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(path, target)

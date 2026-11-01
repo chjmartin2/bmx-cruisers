@@ -47,7 +47,7 @@ void ACruiserHUD::DrawHUD(){
  const auto State=G->Simulation->GetState();const bool Ready=State==BMX::RunState::Ready;
  if(Ready&&G->MenuPage==0){
   Art(TEXT("/Game/UI/Splash.Splash"),0,0,1920,1080);Rect(0,922,1920,158,FLinearColor(.005,.008,.02,.84));
-  Text(TEXT("A CLASSIC CHALLENGE. BUILT TO RIDE AGAIN."),70,949,1.55,Paper,true);Button(0,1130,956,720,70);Text(TEXT("COURSE ONE / COUNTRY LANES"),70,1001,.92,Yellow);
+  Text(TEXT("A CLASSIC CHALLENGE. BUILT TO RIDE AGAIN."),70,949,1.55,Paper,true);Button(0,1130,956,720,70);Text(TEXT("FIVE COURSES / ONE LIFE / UNLIMITED PRACTICE"),70,1001,.92,Yellow);
  }else if(Ready&&(G->MenuPage==1||G->MenuPage==4)){
   Rect(0,0,1920,1080,Ink);Art(TEXT("/Game/UI/Splash.Splash"),1030,-40,1050,590,.13);
   Art(TEXT("/Game/UI/Logo.Logo"),70,24,390,218);Plate(70,265,1765,7,Red,7);
@@ -59,8 +59,9 @@ void ACruiserHUD::DrawHUD(){
    Text(TEXT("ARROWS / WASD"),105,579,2,Yellow,true);Text(TEXT("MOVE & STEER"),105,637,1.15,Dim);
    Text(TEXT("P / ESC"),700,579,2,Yellow,true);Text(TEXT("PAUSE / RETURN"),700,637,1.15,Dim);
    Text(TEXT("R"),1240,579,2,Yellow,true);Text(TEXT("RESTART THE RIDE"),1240,637,1.15,Dim);
-   Text(TEXT("Normal matches the C64. Other paces change course speed; steering stays responsive."),70,790,1.3,Paper);
+   Text(TEXT("Normal keeps C64 timing. Other paces change course speed; steering stays responsive."),70,790,1.3,Paper);
    Text(TEXT("Every character and ride style shares the same course, speed and collision rules."),70,838,1.3,Dim);
+   Text(TEXT("PLAY GAME: one life, five courses for the board. PRACTICE: any course, unlimited retries."),70,886,1.2,Yellow);
   }else{
    Text(TEXT("BMX RACERS"),70,402,2.3,Paper,true);
    Text(TEXT("Original game programming: David Darling & Richard Darling"),70,468,1.5,Paper);
@@ -81,12 +82,18 @@ void ACruiserHUD::DrawHUD(){
   Text(TEXT("PGUP / PGDN  TILT     + / -  ZOOM"),55,925,.9,Yellow);
   Text(TEXT("HOME  RESET     ESC  BACK"),55,967,.9,Paper);
   Text(TEXT("ARROWS  SELECT / ADJUST    ENTER  CONFIRM"),55,1045,.78,Paper);
+ }else if(Ready&&G->MenuPage==8){
+  Rect(0,0,1920,1080,Ink);Art(TEXT("/Game/UI/Logo.Logo"),70,15,390,218);
+  Text(TEXT("THE ONE-LIFE HIGH SCORE BOARD"),70,275,3,Yellow,true);
+  Text(TEXT("ALL FIVE COURSES. IN ORDER. NO CRASHES. NO RETRIES."),74,356,1.3,Paper);
+  for(int I=0;I<5;++I){Plate(150,420+I*92,1600,72,Blue);Text(G->DifficultyName(I),185,440+I*92,1.8,Yellow,true);Text(G->CampaignBestScores[I]>0?FString::Printf(TEXT("%06d  /  ALL FIVE CLEARED"),G->CampaignBestScores[I]):TEXT("NO QUALIFYING FINISH YET"),840,442+I*92,1.4,Paper,true);}
+  Text(TEXT("Practice and unfinished runs never enter this board."),155,912,1.2,Dim);Button(0,150,970,1600,65);
  }else if(Ready){
   bool Workshop=G->MenuPage==3,Settings=G->MenuPage==5;const float Width=Workshop?710:760;Panel(Width);
   Art(TEXT("/Game/UI/Logo.Logo"),52,15,440,246);
   Text(Workshop?TEXT("RIDER GARAGE"):Settings?TEXT("TUNE THE EXPERIENCE"):G->MenuPage==7?TEXT("CHOOSE YOUR COURSE"):FString::Printf(TEXT("COURSE %02d / CITY PARK"),G->CourseIndex),55,268,2.2,Yellow,true);
   Text(Workshop?TEXT("YOUR LOOK. YOUR RIDE."):Settings?TEXT("PICTURE, SOUND & DISPLAY"):TEXT("FIVE ORIGINAL COURSES. EVERY GAP COUNTS."),58,315,.9,Dim);
-  const float Top=369,H=Workshop?65:Settings?72:66,Gap=Workshop?15:Settings?26:16;
+  const float Top=369,H=Workshop?65:Settings?72:60,Gap=Workshop?15:Settings?26:10;
   for(int I=0;I<Actions.Num();++I)Button(I,55,Top+I*(H+Gap),Width-105,H);
   if(Workshop){
    Text(TEXT("SKIN PALETTE"),57,947,.86,Dim);
@@ -96,18 +103,19 @@ void ACruiserHUD::DrawHUD(){
    Text(TEXT("Q / E ROTATE    + / - ZOOM    COSMETIC CHOICES"),974,1003,.75,Dim);
   }else{
    Plate(1130,851,660,147,Ink);Text(TEXT("READY TO RIDE"),1165,878,2.7,Yellow,true);Text(FString::Printf(TEXT("%s / BEST %06d"),G->VehicleName(G->VehicleStyle),G->HighScore),1168,941,1.1,Paper);
-   if(!Settings)Text(TEXT("COURSE PACE CHANGES. STEERING STAYS NORMAL."),58,970,.80,Paper);
   }
   Text(TEXT("ARROWS / TAB  SELECT    ENTER  CONFIRM    ESC  BACK"),55,1045,.83,Paper);
  }else{
   Plate(0,0,480,69,Ink);Plate(742,0,450,69,Ink);Plate(1450,0,470,69,Ink,0);Rect(0,67,1920,2,Red);
-  Text(FString::Printf(TEXT("SCORE  %06d"),(G->ScoreBase+G->Simulation->Score())),30,15,1.9,Paper,true);Text(FString::Printf(TEXT("COURSE %02d"),G->CourseIndex),828,15,1.9,Yellow,true);Text(FString::Printf(TEXT("HI  %06d"),FMath::Max(G->HighScore,(G->ScoreBase+G->Simulation->Score()))),1580,15,1.9,Paper,true);
+  Text(FString::Printf(TEXT("SCORE  %06d"),(G->ScoreBase+G->Simulation->Score())),30,15,1.9,Paper,true);Text(FString::Printf(TEXT("COURSE %02d"),G->CourseIndex),828,15,1.9,Yellow,true);Text(FString::Printf(TEXT("HI  %06d"),G->HighScore),1580,15,1.9,Paper,true);
   Rect(0,1041,1920,39,Ink);Text(TEXT("ARROWS / WASD  STEER     P / ESC  PAUSE     R  RESTART     C  CAMERA     PGUP / PGDN  TILT     + / -  ZOOM"),30,1051,.83,Dim);Text(G->DifficultyName(G->ActiveDifficulty),1720,1051,.88,Yellow,true);
   if(!G->IsMenu()&&Time<G->ViewNoticeUntil){Plate(630,87,700,58,Ink);Text(FString::Printf(TEXT("VIEW  %.0f DEGREES / %.0f%%     HOME: RESET"),G->ViewTilt,G->ViewDistance),660,103,1.1,Yellow,true);}
+  if(!G->IsMenu()&&G->RideWarmupRemaining>0){Plate(660,395,600,150,Ink);Text(TEXT("GET READY TO RIDE"),706,424,2.3,Yellow,true);Text(TEXT("FIND YOUR LINE. THE CLOCK STARTS AT GO."),708,490,.85,Paper);}
+  if(!G->IsMenu()){Plate(30,90,430,44,Ink);Text(G->PlayingGame?TEXT("PLAY GAME / ONE LIFE"):TEXT("PRACTICE / UNLIMITED RETRIES"),48,102,.9,Yellow,true);}
   if(G->IsMenu()){
    bool Finished=State==BMX::RunState::Complete;float Top=Finished?345:200;Plate(480,Top,970,Finished?675:723,Ink,32);Plate(480,Top,970,7,Red,7);
-   Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?(G->CourseIndex==5?TEXT("ALL FIVE CONQUERED!"):TEXT("COURSE CONQUERED!")):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);
-   Text(Finished?TEXT("Every gap cleared. Take your victory lap."):TEXT("Find your pace. Then find your line."),534,Top+104,1.2,Dim);
+   Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?(G->CourseIndex==5&&G->PlayingGame?TEXT("ALL FIVE CONQUERED!"):TEXT("COURSE CONQUERED!")):G->PlayingGame?TEXT("GAME OVER / ONE LIFE"):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);
+   Text(G->Paused?(G->PlayingGame?TEXT("Resume this run, or abandon it and start again."):TEXT("Find your pace. Then find your line.")):G->PlayingGame?(Finished?(G->CourseIndex==5?TEXT("One life. All five. Your finish qualifies for the board."):TEXT("Still one life. Continue to keep your run alive.")):TEXT("This run ends here. The next game starts at Course One.")):TEXT("PRACTICE / unlimited retries / no high-score qualification"),534,Top+104,1.15,Dim);
    for(int I=0;I<Actions.Num();++I)Button(I,530,Top+164+I*(Finished?68:78),870,Finished?55:62);
   }
  }

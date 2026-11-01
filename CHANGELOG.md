@@ -1,14 +1,21 @@
 # Release history
 
-## 1.1.0-beta.1 — five-course development build
+## 1.1.0 — 2026-11-01
 
 - Added the four remaining original courses, using the original loader/finish transitions and per-course native scroll timing.
 - Added keyboard-accessible course selection, next-course continuation, current-course retry and a final Course Five celebration.
+- Separated Play Game from Practice Courses. Play Game has one life and starts at Course One; only five uninterrupted, ordered course finishes qualify for the new per-pace high-score board. Practice allows unrestricted course selection and retries without entering that board. Old practice/retry records cannot qualify retroactively.
 - Continuing carries the HUD score forward; direct selection starts a new score. Best scores are stored per course and pace, with overall records and migration of existing saves.
 - Extended terrain, shoreline interpolation, fences, grass, wildlife, water effects and terrain-following finish panels to every course.
 - Added original-data export tools and collision-enabled completion/transition verification for all five courses.
+- Added explicit left analog-stick axes alongside D-pad and keyboard riding.
+- Replaced the old sprite collision mask during normal play with swept contacts against the displayed rider and visible scenery. Smooth water boundaries and inset shrub contacts make near-misses more consistent. All cosmetic rides share one footprint; original masks remain available for reference verification.
+- Restored missing white boulders, including the misleading dirt patch near the start of Course Three.
+- Made the finish celebration deliberately oversized, with 1,440 chunky firework pieces.
+- Brightened the park for a sunny day, with higher sunlight and more fill in shadows.
+- Removed per-frame rebuilding of hidden fireworks and reused ripple drawing data. Added shader pipeline caching and a short Get Ready interval before the race clock starts.
 
-The public 1.0 release remains the earlier Course One build until a new release is published.
+Normal preserves the original per-course PAL movement and timing; modern visible contacts intentionally replace pixel-mask edge behavior. Selected-course retries are unlimited in Practice. The Windows build remains experimental; animation, materials and hardware coverage have the same beta limitations.
 
 ## 1.0.0-beta.1 — 2026-10-31
 

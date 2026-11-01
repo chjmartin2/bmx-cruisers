@@ -2,6 +2,9 @@
 #include <array>
 #include <cstdint>
 #include <cstddef>
+#include <vector>
+#include <memory>
+#include <cmath>
 #include "../ThirdParty/m6502.h"
 
 namespace BMX {
@@ -12,6 +15,8 @@ enum class RunState { Ready, Riding, Crashed, Complete, Invalid };
 // it is not a general Commodore 64 emulator.
 class OriginalSimulation {
 public:
+    struct ContactGrid {int Width=0,Height=0;std::vector<uint8_t> Cells;bool Hit(double forward,double side)const{int x=int(std::round(forward/5)),y=int(std::round((side+1200)/5));return x>=0&&x<Height&&y>=0&&y<Width&&Cells[x*Width+y]!=0;}};
+    void SetContactGrid(std::shared_ptr<const ContactGrid> grid){Contacts=std::move(grid);}
     static constexpr double ClockHz = 985248.0;
     static constexpr double CentimetersPerPixel = 7.5;
     bool Load(const uint8_t* ram, size_t size, const uint8_t* io, size_t ioSize);
@@ -23,6 +28,8 @@ public:
     void SetSteeringScale(double scale);
     void Advance(double seconds);
     void TickCycles(uint64_t cycles);
+    void SetOriginalCollision(bool enabled){OriginalCollision=enabled;}
+    void Crash(){if(State==RunState::Riding||State==RunState::Complete)State=RunState::Crashed;}
     int Score() const;
     int SpriteX() const { return SteeringStepActive ? SteeringStartX : IO[0] + ((IO[0x10] & 1) ? 256 : 0); }
     int SpriteY() const { return IO[1]; }
@@ -48,6 +55,8 @@ private:
     uint8_t Joystick = 0xff, Collision = 0;
     int ScrollRows = 0;
     bool Loaded = false, IRQActive = false;
+    bool OriginalCollision=true;
+    std::shared_ptr<const ContactGrid> Contacts;
     int ServiceDelay = 0;
     RunState State = RunState::Invalid;
     uint8_t Read(uint16_t address);

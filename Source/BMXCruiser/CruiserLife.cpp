@@ -79,7 +79,7 @@ void ACruiserWorld::BuildLivingPark(const TSharedPtr<FJsonObject>& Data,const TS
  Ripples=NewObject<UProceduralMeshComponent>(this);AddInstanceComponent(Ripples);Ripples->SetupAttachment(Scene);Ripples->SetCollisionEnabled(ECollisionEnabled::NoCollision);Ripples->RegisterComponent();Ripples->SetCastShadow(false);
  Ripples->SetMaterial(0,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Ripple.M_Ripple")));
  Dust=Instances(SphereMesh,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Dust.M_Dust")));Dust->SetCastShadow(false);for(int N=0;N<40;++N)Dust->AddInstance(FTransform(FVector(0,0,-200)));
- Fireworks=Instances(SphereMesh,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Firework.M_Firework")));Fireworks->SetCastShadow(false);for(int N=0;N<420;++N)Fireworks->AddInstance(FTransform(FVector(0,0,-200)));
+ Fireworks=Instances(SphereMesh,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Firework.M_Firework")));Fireworks->SetCastShadow(false);for(int N=0;N<1440;++N)Fireworks->AddInstance(FTransform(FRotator::ZeroRotator,FVector(0,0,-200),FVector::ZeroVector));Fireworks->SetVisibility(false);
  UE_LOG(LogTemp,Display,TEXT("Living park ready: %d ripple sites, %d wildlife; marked original X limits 24..321"),WaterCenters.Num(),Wildlife.Num());
 }
 void ACruiserWorld::UpdateLivingPark(float Dt){
@@ -90,6 +90,7 @@ void ACruiserWorld::UpdateLivingPark(float Dt){
   for(int S=0;S<2;++S)Wings[N*2+S]->SetRelativeRotation(FRotator(0,0,Duck?0:(S?1:-1)*FMath::Sin(T*8+N)*35));
  }
  if(Ripples){
+  const int PreviousVertexCount=RippleVertices.Num();
   RippleVertices.Reset();RippleIndices.Reset();RippleNormals.Reset();RippleUV.Reset();RippleColors.Reset();
   float X=Rider->GetRelativeLocation().X;
   for(int N=0;N<WaterCenters.Num();++N){FVector P=WaterCenters[N];if(FMath::Abs(P.X-X)>2400)continue;
@@ -97,12 +98,14 @@ void ACruiserWorld::UpdateLivingPark(float Dt){
     for(int A=0;A<=48;++A)for(int Edge=0;Edge<2;++Edge){float Angle=A*2*PI/48,Rad=R+(Edge?W:-W);RippleVertices.Add(P+FVector(FMath::Cos(Angle)*Rad,FMath::Sin(Angle)*Rad,.16+Ring*.03));RippleNormals.Add(FVector::UpVector);RippleUV.Add(FVector2D(A/48.f,Edge));RippleColors.Add(FLinearColor(.1,.19,.19,1-Age));if(A<48&&Edge==0){int Q=Base+A*2;RippleIndices.Append({Q,Q+2,Q+1,Q+1,Q+2,Q+3});}}
    }
   }
-  Ripples->CreateMeshSection_LinearColor(0,RippleVertices,RippleIndices,RippleNormals,RippleUV,RippleColors,TArray<FProcMeshTangent>(),false);
+  if(PreviousVertexCount==RippleVertices.Num()&&Ripples->GetNumSections()>0)
+   Ripples->UpdateMeshSection_LinearColor(0,RippleVertices,RippleNormals,RippleUV,RippleColors,TArray<FProcMeshTangent>());
+  else Ripples->CreateMeshSection_LinearColor(0,RippleVertices,RippleIndices,RippleNormals,RippleUV,RippleColors,TArray<FProcMeshTangent>(),false);
  }
  bool Riding=Simulation->GetState()==BMX::RunState::Riding&&!Paused;
  if(Dust){for(int N=0;N<40;++N){float Age=FMath::Fmod(T*1.5+N*.173,1.f);FVector P=Rider->GetRelativeLocation()+FVector(-50-Age*100,FMath::Sin(N*71.f)*15,3+Age*14);float Size=Riding?(1-Age)*.025:0;Dust->UpdateInstanceTransform(N,FTransform(FRotator::ZeroRotator,P,FVector(Size)),false,false);}Dust->MarkRenderStateDirty();}
  if(CelebrationTime>=0)CelebrationTime+=Dt;
- if(Fireworks&&CelebrationTime>=0){for(int N=0;N<420;++N){int Burst=N/70,Ray=N%70;float Age=FMath::Fmod(CelebrationTime+Burst*.47f,3.2f),A=Ray*2.39996f,B=FMath::Acos(1-2*(Ray+.5f)/70);FVector Direction(FMath::Cos(A)*FMath::Sin(B),FMath::Sin(A)*FMath::Sin(B),FMath::Cos(B));
-  FVector Center=Rider->GetRelativeLocation()+FVector(-150+(Burst%3)*160,(Burst%2?1:-1)*(390+Burst*44),200+(Burst%3)*60);FVector P=Center+Direction*(90+Burst*12)*Age+FVector(0,0,-55*Age*Age);float Size=Age<2.5?.038f*(1-Age/3):0;Fireworks->UpdateInstanceTransform(N,FTransform(FRotationMatrix::MakeFromZ(Direction).Rotator(),P,FVector(Size*.48f,Size*.48f,Size*2.1f)),false,false);}Fireworks->MarkRenderStateDirty();}
- else if(Fireworks&&Simulation->GetState()==BMX::RunState::Riding){for(int N=0;N<420;++N)Fireworks->UpdateInstanceTransform(N,FTransform(FVector(0,0,-200)),false,false);Fireworks->MarkRenderStateDirty();}
+ if(Fireworks&&Fireworks->IsVisible()!=(CelebrationTime>=0))Fireworks->SetVisibility(CelebrationTime>=0);
+ if(Fireworks&&CelebrationTime>=0){for(int N=0;N<1440;++N){int Burst=N/120,Ray=N%120;float Age=FMath::Fmod(CelebrationTime+Burst*.31f,3.8f),A=Ray*2.39996f,B=FMath::Acos(1-2*(Ray+.5f)/120);FVector Direction(FMath::Cos(A)*FMath::Sin(B),FMath::Sin(A)*FMath::Sin(B),FMath::Cos(B));
+  FVector Center=Rider->GetRelativeLocation()+FVector(100+(Burst%4)*320,(Burst%2?1:-1)*(600+(Burst%4)*220),450+(Burst%3)*220);FVector P=Center+Direction*(480+(Burst%4)*80)*Age+FVector(0,0,-85*Age*Age);float Size=Age<3.3f?(.65f+(Burst%3)*.16f)*(1-Age/4):0;Fireworks->UpdateInstanceTransform(N,FTransform(FRotationMatrix::MakeFromZ(Direction).Rotator(),P,FVector(Size,Size,Size*1.65f)),false,false);}Fireworks->MarkRenderStateDirty();}
 }

@@ -1,6 +1,6 @@
 # BMX Cruisers
 
-Keep the recovered Normal-pace gameplay, obstacle layout and collision masks authoritative. Cosmetic changes must not alter simulation memory or score. Other paces keep Normal's real-time lateral steering rate.
+Keep recovered Normal-pace movement, timing and obstacle layout authoritative. Modern collision follows the displayed rider and visible obstacles/shorelines, using a common footprint for every cosmetic ride style. Keep original pixel masks available with -OriginalCollision for reference checks. Cosmetic choices must not alter simulation memory or score. Other paces keep Normal's real-time lateral steering rate.
 
 Run `tools/test-core.cmd` and `tools/test-display.cmd` for gameplay/display changes. Use the packaged collision-enabled replay for runtime changes. Preserve player preferences when capturing verification footage.
 

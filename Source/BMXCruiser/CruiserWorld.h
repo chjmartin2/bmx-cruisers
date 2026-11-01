@@ -24,6 +24,7 @@ public:
     UPROPERTY() TArray<int32> BestScores;
     UPROPERTY() TArray<int32> CourseBestScores;
     UPROPERTY() TArray<int32> CampaignBestScores;
+    UPROPERTY() TArray<int32> CompletedRunBestScores;
     UPROPERTY() int32 Pace=2;
     UPROPERTY() int32 Gender=0;
     UPROPERTY() int32 Outfit=0;
@@ -48,6 +49,9 @@ public:
     TArray<int32> CourseBestScores;
     TArray<int32> CampaignBestScores;
     int32 ScoreBase=0;
+    bool PlayingGame=false;
+    int32 ClearedCourses=0,RunPace=BMX::RideSettings::Normal;
+    void PlayGame();
     FString CourseFile(const FString& Suffix)const;
     void SelectCourse(int32 Course,bool Start=false);
     bool Paused=false, Muted=false;
@@ -87,6 +91,7 @@ public:
     static FLinearColor SkinColor(int32 Index);
     void SavePreferences();
     float CelebrationTime=-1;
+    float RideWarmupRemaining=0;
 private:
     UPROPERTY() TObjectPtr<USceneComponent> Scene;
     UPROPERTY() TObjectPtr<USceneComponent> Rider;
@@ -192,6 +197,17 @@ private:
     float LastPosePhase=-1;
     BMX::RunState PreviousState=BMX::RunState::Invalid;
     bool BuildCourse();
+    struct FVisibleObstacle{FVector2D A,B,Radius;bool Ellipse=false;};
+    TArray<FVisibleObstacle> VisibleObstacles;
+    struct FWaterTriangle{FVector2D A,B,C;FBox2D Bounds;};
+    TArray<FWaterTriangle> WaterContacts;
+    TMap<int32,TArray<int32>> WaterContactBuckets,ObstacleContactBuckets;
+    FVector PreviousContactPosition=FVector::ZeroVector;
+    bool HaveContactPosition=false;
+    int32 AnalogTestPhase=-1,AnalogStartX=0,AnalogStartY=0;
+    bool AnalogTestGood=true;
+    bool VisibleContact(FVector Position)const;
+    bool SweepVisibleContact(FVector From,FVector To)const;
     float FenceGroundHeight(float X,float Y) const;
     void DressCourse(const TSharedPtr<class FJsonObject>& Data,const TSharedPtr<class FJsonObject>& Visual);
     void BuildRider();
