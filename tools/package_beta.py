@@ -1,6 +1,6 @@
 """Create a clean, portable beta ZIP without developer saves, logs or symbols."""
 from pathlib import Path
-import hashlib, json, shutil, zipfile
+import hashlib, json, shutil, zipfile, sys
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = '1.0.0-beta.1'
@@ -8,7 +8,8 @@ OUT = ROOT / 'releases' / VERSION
 STAGE = OUT / ('BMX-Cruisers-' + VERSION + '-Windows-x64')
 assert not STAGE.exists(), 'Use a new release directory; never overwrite a staged release.'
 STAGE.mkdir(parents=True)
-source = ROOT / 'Build/Windows'
+source = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / 'Build/Windows'
+assert (source / 'BMXCruiser.exe').is_file(), 'Supply a packaged Windows directory.'
 for path in source.rglob('*'):
     if not path.is_file(): continue
     rel = path.relative_to(source)
