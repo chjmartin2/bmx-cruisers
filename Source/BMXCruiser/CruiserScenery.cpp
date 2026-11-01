@@ -76,7 +76,7 @@ void ACruiserWorld::DressCourse(const TSharedPtr<FJsonObject>& Data,const TShare
             G.I.Append({Base,Base+4,Base+1,Base+1,Base+4,Base+2,Base+2,Base+4,Base+3,Base+3,Base+4,Base});
         }
     }
-    TArray<uint8> Cells;FFileHelper::LoadFileToArray(Cells,*(FPaths::ProjectContentDir()/TEXT("Data/course1-terrain.bin")));
+    TArray<uint8> Cells;FFileHelper::LoadFileToArray(Cells,*(CourseFile(TEXT("-terrain.bin"))));
     int Height=Data->GetIntegerField(TEXT("height"))*8;
     // Low gravel and leaf litter add wear, never new collision or visual barriers.
     for(int i=0;i<32000;++i){

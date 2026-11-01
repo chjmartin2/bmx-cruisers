@@ -1,9 +1,9 @@
 """Create a clean, portable beta ZIP without developer saves, logs or symbols."""
 from pathlib import Path
-import hashlib, json, shutil, zipfile, sys
+import hashlib, json, shutil, zipfile, sys, re
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '1.0.0-beta.1'
+VERSION = re.search(r'^ProjectVersion=(.+)$',(ROOT/'Config/DefaultGame.ini').read_text(encoding='utf-8'),re.M).group(1).strip()
 OUT = ROOT / 'releases' / VERSION
 STAGE = OUT / ('BMX-Cruisers-' + VERSION + '-Windows-x64')
 assert not STAGE.exists(), 'Use a new release directory; never overwrite a staged release.'
@@ -18,7 +18,7 @@ for path in source.rglob('*'):
     target = STAGE / rel
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(path, target)
-for src, name in [('docs/RELEASE-1.0-BETA.md', 'START-HERE.txt'), ('THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.txt'), ('CHANGELOG.md', 'RELEASE-NOTES.txt'), ('assets/CREDITS.md', 'CREDITS.txt')]:
+for src, name in [('docs/PLAY.md' if (ROOT/'docs/PLAY.md').exists() else 'docs/RELEASE-1.0-BETA.md', 'START-HERE.txt'), ('THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.txt'), ('CHANGELOG.md', 'RELEASE-NOTES.txt'), ('assets/CREDITS.md', 'CREDITS.txt')]:
     shutil.copy2(ROOT / src, STAGE / name)
 license_text = (ROOT / 'Source/BMXCruiser/ThirdParty/m6502.h').read_text(encoding='utf-8')
 # Retain the complete original copyright/license header, including its usage notes.

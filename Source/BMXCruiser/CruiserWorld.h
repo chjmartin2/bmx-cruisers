@@ -22,6 +22,8 @@ class UCrusierSave : public USaveGame {
 public:
     UPROPERTY() int32 HighScore=0;
     UPROPERTY() TArray<int32> BestScores;
+    UPROPERTY() TArray<int32> CourseBestScores;
+    UPROPERTY() TArray<int32> CampaignBestScores;
     UPROPERTY() int32 Pace=2;
     UPROPERTY() int32 Gender=0;
     UPROPERTY() int32 Outfit=0;
@@ -42,6 +44,12 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     TUniquePtr<BMX::OriginalSimulation> Simulation;
     int32 HighScore=0;
+    int32 CourseIndex=1,FinishScore=210;
+    TArray<int32> CourseBestScores;
+    TArray<int32> CampaignBestScores;
+    int32 ScoreBase=0;
+    FString CourseFile(const FString& Suffix)const;
+    void SelectCourse(int32 Course,bool Start=false);
     bool Paused=false, Muted=false;
     bool EffectsMuted=false;
     int32 DifficultyIndex=BMX::RideSettings::Normal,ActiveDifficulty=BMX::RideSettings::Normal;

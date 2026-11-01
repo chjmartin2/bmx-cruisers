@@ -11,7 +11,7 @@
 #include "Camera/CameraComponent.h"
 
 void ACruiserWorld::BuildLivingPark(const TSharedPtr<FJsonObject>& Data,const TSharedPtr<FJsonObject>& Visual){
- FFileHelper::LoadFileToArray(CourseCells,*(FPaths::ProjectContentDir()/TEXT("Data/course1-terrain.bin")));
+ FFileHelper::LoadFileToArray(CourseCells,*(CourseFile(TEXT("-terrain.bin"))));
  const int H=Data->GetIntegerField(TEXT("height"))*8;FRandomStream R(31985);
  auto Cell=[&](int X,int Y){return X>=0&&X<320&&Y>=0&&Y<H&&CourseCells.IsValidIndex(Y*320+X)?CourseCells[Y*320+X]:uint8(255);};
  auto* Reeds=Instances(CylinderMesh,Materials[4]);auto* Heads=Instances(SphereMesh,Materials[3]);auto* Pebbles=Instances(SphereMesh,Materials[11]);auto* Leaves=Instances(SphereMesh,Materials[4]);auto* Wood=Instances(CylinderMesh,Materials[3]);

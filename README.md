@@ -1,6 +1,8 @@
-# BMX Cruisers — 1.0 beta / Course One
+# BMX Cruisers — all five courses
 
-A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 Course One logic in a 3D park. The title is BMX Cruisers; the original BMX Racers is acknowledged in Credits.
+A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 logic for all five courses in a 3D park. The title is BMX Cruisers; the original BMX Racers is acknowledged in Credits.
+
+The local development build includes all five courses. The published 1.0 download below contains Course One.
 
 [Download the Windows beta](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.0.0-beta.1) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
 
@@ -77,7 +79,7 @@ Use Unreal Engine 5.8 plus Microsoft C++ Build Tools 2022 and a Windows SDK. Run
 
 `tools/build.ps1 -EnginePath 'C:/Program Files/Epic Games/UE_5.8' -Package`
 
-The repository includes the prepared project assets except editable Epic template derivatives. On a fresh checkout, the build restores the head from your installed UE 5.8 MetaHumanCharacter/MetaHuman plugins; these plugins must be installed. Raw downloaded authoring sources are excluded. A complete art regeneration with -PrepareAssets also requires the source files recorded in the asset manifests. The asset preparation commandlet imports scanned scenery, authored equipment and refined riders, constructs material graphs and saves the blank Course One level that the runtime dresses. The packaged output is `Build/Windows/BMXCruiser.exe`. The project opens through `BMXCruiser.uproject`.
+The repository includes the prepared project assets except editable Epic template derivatives. On a fresh checkout, the build restores the head from your installed UE 5.8 MetaHumanCharacter/MetaHuman plugins; these plugins must be installed. Raw downloaded authoring sources are excluded. A complete art regeneration with -PrepareAssets also requires the source files recorded in the asset manifests. The asset preparation commandlet imports scanned scenery, authored equipment and refined riders, constructs material graphs and saves the shared park level that the runtime dresses. The packaged output is `Build/Windows/BMXCruiser.exe`. The project opens through `BMXCruiser.uproject`.
 
 - `tools/author_equipment.py`: regenerate the OBJ/MTL equipment sources and inventory.
 - `tools/refine_riders.py`: create refined FBX derivatives without altering the original avatar files.
@@ -108,3 +110,11 @@ Asset provenance and licenses: [assets/CREDITS.md](assets/CREDITS.md). Additiona
 ### Course-following camera
 
 The riding camera follows the course scroll at a fixed lateral center. Up/Down moves the rider through the frame as on the C64; Left/Right also remains visible within the trail width. The default elevated 40-degree view uses a 52-degree field of view, 23 metres behind the scroll origin and 24.5 metres above it. Players can set tilt from 30 to 75 degrees and distance from 90% to 140%, in five-unit steps. C opens a live course preview and pauses an active ride; the same controls are in Picture & Sound and the pause menu. Page Up/Page Down, +/-, and Home also work during a ride. Tilt and distance are saved independently of character customization. Garage orbit and zoom are independent.
+
+## All five courses (1.1 beta development build)
+
+Choose Course opens all five original courses. Finish a course and choose Continue to move directly to the next. Ride Again retries the current course; the final finish screen celebrates completion of Course Five. Each course has separate best scores for all five pace settings. Existing Course One scores migrate automatically.
+
+The original row loader and finish routine determine the course boundaries and native movement settings. Finish scroll counts are 210, 250, 375, 500 and 625. The later stages begin with the actual post-finish screen and loader state recovered from the original. The HUD score carries forward when continuing between courses; direct selection starts a new score. Per-course records remain separate.
+
+Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. The public 1.0 download and trailer still describe the earlier Course One release until a new release is published.

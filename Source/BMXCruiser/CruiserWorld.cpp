@@ -91,6 +91,11 @@ UInstancedStaticMeshComponent* ACruiserWorld::Instances(UStaticMesh* Mesh,UMater
 
 void ACruiserWorld::BeginPlay() {
     Super::BeginPlay();
+    const TCHAR* LevelCourse=GetWorld()->URL.GetOption(TEXT("Course="),TEXT(""));
+    if(*LevelCourse)CourseIndex=FCString::Atoi(LevelCourse);else FParse::Value(FCommandLine::Get(),TEXT("Course="),CourseIndex);
+    CourseIndex=FMath::Clamp(CourseIndex,1,5);
+    ScoreBase=FMath::Max(0,FCString::Atoi(GetWorld()->URL.GetOption(TEXT("ScoreBase="),TEXT("0"))));
+    if(*LevelCourse)MenuPage=2;
     // Opt-in offline trailer capture. Ordinary play continues to use real time.
     if(FParse::Value(FCommandLine::Get(),TEXT("CaptureVideo="),VideoCaptureDirectory)){
         VideoCaptureDirectory=FPaths::ConvertRelativePathToFull(VideoCaptureDirectory);
@@ -99,24 +104,28 @@ void ACruiserWorld::BeginPlay() {
     }
     InitializeDisplay();
     TArray<uint8> RAM,IO;
-    if(!FFileHelper::LoadFileToArray(RAM,*(FPaths::ProjectContentDir()/TEXT("Data/original-ram.bin")))||
-       !FFileHelper::LoadFileToArray(IO,*(FPaths::ProjectContentDir()/TEXT("Data/original-io.bin")))||
+    if(!FFileHelper::LoadFileToArray(RAM,*(CourseIndex==1?FPaths::ProjectContentDir()/TEXT("Data/original-ram.bin"):CourseFile(TEXT("-ram.bin"))))||
+       !FFileHelper::LoadFileToArray(IO,*(CourseIndex==1?FPaths::ProjectContentDir()/TEXT("Data/original-io.bin"):CourseFile(TEXT("-io.bin"))))||
        !Simulation->Load(RAM.GetData(),RAM.Num(),IO.GetData(),IO.Num())) {
-        Failure=TEXT("The Course One data could not be loaded.");return;
+        Failure=TEXT("The selected course data could not be loaded.");return;
     }
-    BestScores.Init(0,BMX::RideSettings::Count);
+    BestScores.Init(0,BMX::RideSettings::Count);CourseBestScores.Init(0,25);CampaignBestScores.Init(0,5);
     if(auto* Save=Cast<UCrusierSave>(UGameplayStatics::LoadGameFromSlot(TEXT("BMXCruiser"),0))){
         if(Save->BestScores.Num()==BMX::RideSettings::Count)BestScores=Save->BestScores;
         else BestScores[BMX::RideSettings::Normal]=Save->HighScore;
+        CampaignBestScores=Save->CampaignBestScores.Num()==5?Save->CampaignBestScores:BestScores;
+        if(Save->CourseBestScores.Num()==25)CourseBestScores=Save->CourseBestScores;
+        else for(int I=0;I<5;++I)CourseBestScores[I]=BestScores[I];
         ViewTilt=FMath::IsFinite(Save->ViewTilt)?FMath::Clamp(Save->ViewTilt,30.f,75.f):40;
         ViewDistance=FMath::IsFinite(Save->ViewDistance)?FMath::Clamp(Save->ViewDistance,90.f,140.f):100;
         SkinTone=FMath::Clamp(Save->SkinTone,0,6);DifficultyIndex=FMath::Clamp(Save->Pace,0,4);Gender=FMath::Clamp(Save->Gender,0,1);Outfit=FMath::Clamp(Save->Outfit,0,1);
         HelmetColor=FMath::Clamp(Save->HelmetColor,0,7);BikeColor=FMath::Clamp(Save->BikeColor,0,7);VehicleStyle=FMath::Clamp(Save->VehicleStyle,0,5);
     }
+    for(int I=0;I<5;++I)BestScores[I]=CourseBestScores[(CourseIndex-1)*5+I];
     FParse::Value(FCommandLine::Get(),TEXT("ViewTilt="),ViewTilt);ViewTilt=FMath::Clamp(ViewTilt,30.f,75.f);
     FParse::Value(FCommandLine::Get(),TEXT("ViewDistance="),ViewDistance);ViewDistance=FMath::Clamp(ViewDistance,90.f,140.f);
     FParse::Value(FCommandLine::Get(),TEXT("Difficulty="),DifficultyIndex);
-    DifficultyIndex=FMath::Clamp(DifficultyIndex,0,BMX::RideSettings::Count-1);HighScore=BestScores[DifficultyIndex];
+    DifficultyIndex=FMath::Clamp(DifficultyIndex,0,BMX::RideSettings::Count-1);HighScore=CampaignBestScores[DifficultyIndex];
     if(!BuildCourse()){Failure=TEXT("The park assets need to be prepared.");return;}
     FParse::Value(FCommandLine::Get(),TEXT("Style="),VehicleStyle);VehicleStyle=FMath::Clamp(VehicleStyle,0,5);
     FParse::Value(FCommandLine::Get(),TEXT("Gender="),Gender);Gender=FMath::Clamp(Gender,0,1);
@@ -137,11 +146,15 @@ void ACruiserWorld::BeginPlay() {
         InputComponent->BindKey(EKeys::M,IE_Pressed,this,&ACruiserWorld::ToggleMusic);
         InputComponent->BindKey(EKeys::V,IE_Pressed,this,&ACruiserWorld::ToggleEffects);
     }
-    UE_LOG(LogTemp,Display,TEXT("Course One ready"));
+    UE_LOG(LogTemp,Display,TEXT("Course ready"));
     StartMusic();PreviousState=Simulation->GetState();
+    if(FCString::Atoi(GetWorld()->URL.GetOption(TEXT("Start="),TEXT("0"))))RestartRide();
     // Optional developer replay uses the same simulation and original collision.
     FString ReplayPath;
-    if(FParse::Value(FCommandLine::Get(),TEXT("ReplayFile="),ReplayPath)){
+    FParse::Value(FCommandLine::Get(),TEXT("ReplayFile="),ReplayPath);
+    FString ReplayDirectory;
+    if(FParse::Value(FCommandLine::Get(),TEXT("CourseReplayDirectory="),ReplayDirectory))ReplayPath=ReplayDirectory/FString::Printf(TEXT("course%d-completion-replay.json"),CourseIndex);
+    if(!ReplayPath.IsEmpty()){
         FString Json;TSharedPtr<FJsonObject> Replay;
         if(FFileHelper::LoadFileToString(Json,*ReplayPath)&&FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Replay)&&Replay.IsValid()){
             MenuPage=2;ReplayStepCycles=Replay->GetIntegerField(TEXT("cycles_per_input"));
@@ -153,6 +166,13 @@ void ACruiserWorld::BeginPlay() {
     LastWallTime=FPlatformTime::Seconds();
 }
 
+FString ACruiserWorld::CourseFile(const FString& Suffix)const{
+    return FPaths::ProjectContentDir()/FString::Printf(TEXT("Data/course%d%s"),CourseIndex,*Suffix);
+}
+void ACruiserWorld::SelectCourse(int32 Course,bool Start){
+    SaveBest();SavePreferences();
+    UGameplayStatics::OpenLevel(this,TEXT("CourseOne"),true,FString::Printf(TEXT("Course=%d?Start=%d?ScoreBase=%d"),FMath::Clamp(Course,1,5),Start?1:0,Start?ScoreBase+Simulation->Score():0));
+}
 bool ACruiserWorld::BuildCourse() {
     const TCHAR* Names[]={TEXT("Grass"),TEXT("Asphalt"),TEXT("Water"),TEXT("Wood"),TEXT("Foliage"),TEXT("Metal"),TEXT("Rubber"),TEXT("Blue"),TEXT("Purple"),TEXT("Skin"),TEXT("Dark"),TEXT("Rock"),TEXT("White"),TEXT("Bank"),TEXT("Verge"),TEXT("FlowerWhite"),TEXT("FlowerYellow"),TEXT("FlowerPurple"),TEXT("FlowerRed")};
     for(const auto* Name:Names){
@@ -161,9 +181,10 @@ bool ACruiserWorld::BuildCourse() {
         if(!Material)return false;Materials.Add(Material);
     }
     FString Text;
-    if(!FFileHelper::LoadFileToString(Text,*(FPaths::ProjectContentDir()/TEXT("Data/course1.json"))))return false;
+    if(!FFileHelper::LoadFileToString(Text,*(CourseFile(TEXT(".json")))))return false;
     TSharedPtr<FJsonObject> Data;
     if(!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text),Data)||!Data.IsValid())return false;
+    FinishScore=Data->GetIntegerField(TEXT("finish_scroll"));
     TArray<FBox2D> FinishFootprints;
     auto Surface=[&](const TCHAR* Field,int Section,UMaterialInterface* Material,float Height){
         TArray<FVector> Vertices,Normals;TArray<int32> Indices;TArray<FVector2D> UV;
@@ -189,7 +210,7 @@ bool ACruiserWorld::BuildCourse() {
         UE_LOG(LogTemp,Display,TEXT("FINISH TERRAIN section %d: %s, minimum clearance %.3f cm"),Section,MinClearance>=Height-.01f?TEXT("PASSED"):TEXT("FAILED"),MinClearance);
     };
     FString VisualText;TSharedPtr<FJsonObject> Visual;
-    if(!FFileHelper::LoadFileToString(VisualText,*(FPaths::ProjectContentDir()/TEXT("Data/course1-visuals.json")))||
+    if(!FFileHelper::LoadFileToString(VisualText,*(CourseFile(TEXT("-visuals.json"))))||
        !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(VisualText),Visual)||!Visual.IsValid())return false;
     auto SmoothSurface=[&](const TCHAR* Field,int Section,UMaterialInterface* Material){
         const auto Mesh=Visual->GetObjectField(Field);
@@ -200,7 +221,7 @@ bool ACruiserWorld::BuildCourse() {
             // Interior water openings and the original playable terrain stay intact.
             if(FCString::Strcmp(Field,TEXT("grass_underlay"))==0){
                 if(V.Y<=-2025)V.Y=-8000;else if(V.Y>=2025)V.Y=8000;
-                if(V.X<=-750)V.X=-6000;else if(V.X>=14730)V.X=21000;
+                if(V.X<=-750)V.X=-6000;else if(V.X>=(Data->GetIntegerField(TEXT("height"))*8+100)*7.5)V.X=(Data->GetIntegerField(TEXT("height"))*8+100)*7.5+6000;
             }
             Vertices.Add(V);Normals.Add(FVector::UpVector);UV.Add(FVector2D(V.X/200,V.Y/200));
         }
@@ -300,7 +321,7 @@ bool ACruiserWorld::BuildCourse() {
         }
     }
     TArray<uint8> TerrainCells;
-    FFileHelper::LoadFileToArray(TerrainCells,*(FPaths::ProjectContentDir()/TEXT("Data/course1-terrain.bin")));
+    FFileHelper::LoadFileToArray(TerrainCells,*(CourseFile(TEXT("-terrain.bin"))));
     const auto& Shore=Visual->GetObjectField(TEXT("banks"))->GetArrayField(TEXT("vertices"));
     for(int i=2;i<Shore.Num();i+=90){
         if(Random.FRand()<.25f)continue;
@@ -318,7 +339,7 @@ bool ACruiserWorld::BuildCourse() {
     auto* Grass=Instances(GrassMesh,GrassMaterial?GrassMaterial:Materials[4].Get());Grass->SetCullDistances(4600,6500);
     Grass->SetCastShadow(false);Grass->bAffectDistanceFieldLighting=false;
     const auto GB=GrassMesh->GetBounds();
-    TArray<uint8> Meadow;FFileHelper::LoadFileToArray(Meadow,*(FPaths::ProjectContentDir()/TEXT("Data/meadow-heights.bin")));
+    TArray<uint8> Meadow;FFileHelper::LoadFileToArray(Meadow,*((CourseIndex==1?FPaths::ProjectContentDir()/TEXT("Data/meadow-heights.bin"):CourseFile(TEXT("-meadow.bin")))));
     auto GrassHeight=[&](float PX,float PY){
         constexpr int Columns=136;int Rows=Meadow.Num()/int(sizeof(float))/Columns;
         if(Rows<2)return -2.f;
@@ -377,8 +398,10 @@ void ACruiserWorld::CreateLighting() {
 
 void ACruiserWorld::SaveBest() {
     if(ReplayInputs.Num())return;
-    if(Simulation->Score()<=BestScores[ActiveDifficulty])return;
-    BestScores[ActiveDifficulty]=Simulation->Score();HighScore=BestScores[DifficultyIndex];
+    BestScores[ActiveDifficulty]=FMath::Max(BestScores[ActiveDifficulty],Simulation->Score());
+    CourseBestScores[(CourseIndex-1)*5+ActiveDifficulty]=BestScores[ActiveDifficulty];
+    CampaignBestScores[ActiveDifficulty]=FMath::Max(CampaignBestScores[ActiveDifficulty],ScoreBase+Simulation->Score());
+    HighScore=CampaignBestScores[DifficultyIndex];
     SavePreferences();
 }
 
@@ -401,8 +424,8 @@ void ACruiserWorld::PauseRide(){if(Simulation->GetState()==BMX::RunState::Riding
 void ACruiserWorld::ToggleMusic(){Muted=!Muted;UpdateAudio();}
 void ACruiserWorld::ToggleEffects(){EffectsMuted=!EffectsMuted;UpdateAudio();}
 const TCHAR* ACruiserWorld::DifficultyName(int32 Index){const TCHAR* Names[]={TEXT("CRUISE"),TEXT("RELAXED"),TEXT("NORMAL"),TEXT("FAST"),TEXT("EXPERT")};return Names[FMath::Clamp(Index,0,4)];}
-void ACruiserWorld::SetDifficulty(int32 Index){if(!IsMenu())return;DifficultyIndex=FMath::Clamp(Index,0,4);HighScore=BestScores[DifficultyIndex];SavePreferences();PlayEffect(TEXT("select"));}
-void ACruiserWorld::ReturnToTitle(){MenuPage=2;MenuFocus=0;CelebrationTime=-1;SaveBest();Simulation->Reset();ScrollView.Reset();DisplayScroll=0;Paused=false;PedalPhase=0;Rider->SetRelativeRotation(FRotator::ZeroRotator);Rider->SetRelativeLocation(FVector(Simulation->ForwardPixels()*7.5,Simulation->RightPixels()*7.5,2));}
+void ACruiserWorld::SetDifficulty(int32 Index){if(!IsMenu())return;DifficultyIndex=FMath::Clamp(Index,0,4);HighScore=CampaignBestScores[DifficultyIndex];SavePreferences();PlayEffect(TEXT("select"));}
+void ACruiserWorld::ReturnToTitle(){MenuPage=2;MenuFocus=0;CelebrationTime=-1;SaveBest();ScoreBase=0;Simulation->Reset();ScrollView.Reset();DisplayScroll=0;Paused=false;PedalPhase=0;Rider->SetRelativeRotation(FRotator::ZeroRotator);Rider->SetRelativeLocation(FVector(Simulation->ForwardPixels()*7.5,Simulation->RightPixels()*7.5,2));}
 
 void ACruiserWorld::AdvanceReplay(float DeltaSeconds){
     ReplayDelay+=DeltaSeconds;
@@ -410,7 +433,7 @@ void ACruiserWorld::AdvanceReplay(float DeltaSeconds){
     if(Simulation->GetState()==BMX::RunState::Ready)RestartRide();
     ReplayBudget+=DeltaSeconds*ActiveSpeed*BMX::OriginalSimulation::ClockHz;
     while(ReplayBudget>=1&&ReplayIndex<ReplayInputs.Num()&&Simulation->GetState()==BMX::RunState::Riding){
-        int Input=ReplayInputs[ReplayIndex];Simulation->SetInput(Input<0,Input>0,false,false);
+        int Input=ReplayInputs[ReplayIndex];Simulation->SetInput(Input==-1||Input==4||Input==6,Input==1||Input==5||Input==7,Input==3||Input==6||Input==7,Input==2||Input==4||Input==5);
         uint64 Chunk=FMath::Min(uint64(ReplayBudget),uint64(ReplayStepCycles)-ReplayCycles);
         Simulation->TickCycles(Chunk);ReplayCycles+=Chunk;ReplayBudget-=Chunk;
         if(ReplayCycles==uint64(ReplayStepCycles)){++ReplayIndex;ReplayCycles=0;}
@@ -477,14 +500,14 @@ void ACruiserWorld::Tick(float DeltaSeconds) {
     if(State!=PreviousState&&(State==BMX::RunState::Crashed||State==BMX::RunState::Complete)){
         SaveBest();FString Effect=State==BMX::RunState::Complete?TEXT("finish"):TEXT("crash");
         if(State==BMX::RunState::Crashed){
-            TArray<uint8> Cells;FFileHelper::LoadFileToArray(Cells,*(FPaths::ProjectContentDir()/TEXT("Data/course1-terrain.bin")));
+            TArray<uint8> Cells;FFileHelper::LoadFileToArray(Cells,*(CourseFile(TEXT("-terrain.bin"))));
             int PX=FMath::RoundToInt(Simulation->RightPixels()+160),PY=FMath::RoundToInt(Simulation->ForwardPixels());
             if(PX>=0&&PX<320&&Cells.IsValidIndex(PY*320+PX)&&Cells[PY*320+PX]==2)Effect=TEXT("splash");
         }
         PlayEffect(Effect);MenuFocus=0;if(State==BMX::RunState::Complete)CelebrationTime=0;
         UE_LOG(LogTemp,Display,TEXT("Ride ended: state %d, score %d, source seconds %.6f, wall seconds %.6f, speed %.2fx"),int(State),Simulation->Score(),Simulation->Cycles()/BMX::OriginalSimulation::ClockHz,WallNow-RideWallStart,ActiveSpeed);
         if(ReplayInputs.Num()){
-            UE_LOG(LogTemp,Display,TEXT("VERIFICATION %s"),State==BMX::RunState::Complete&&Simulation->Score()==210?TEXT("PASSED"):TEXT("FAILED"));
+            UE_LOG(LogTemp,Display,TEXT("VERIFICATION %s"),State==BMX::RunState::Complete&&Simulation->Score()==FinishScore?TEXT("PASSED"):TEXT("FAILED"));
             if(FParse::Param(FCommandLine::Get(),TEXT("ProfileCourse"))&&FCsvProfiler::IsCapturing())FCsvProfiler::Get()->EndCapture();
             FScreenshotRequest::RequestScreenshot(TEXT("CourseOne-finish"),true,true);
         }

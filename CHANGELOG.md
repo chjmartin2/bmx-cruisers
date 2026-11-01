@@ -1,5 +1,15 @@
 # Release history
 
+## 1.1.0-beta.1 — five-course development build
+
+- Added the four remaining original courses, using the original loader/finish transitions and per-course native scroll timing.
+- Added keyboard-accessible course selection, next-course continuation, current-course retry and a final Course Five celebration.
+- Continuing carries the HUD score forward; direct selection starts a new score. Best scores are stored per course and pace, with overall records and migration of existing saves.
+- Extended terrain, shoreline interpolation, fences, grass, wildlife, water effects and terrain-following finish panels to every course.
+- Added original-data export tools and collision-enabled completion/transition verification for all five courses.
+
+The public 1.0 release remains the earlier Course One build until a new release is published.
+
 ## 1.0.0-beta.1 — 2026-10-31
 
 First public Windows beta of BMX Cruisers. Course One from the C64 BMX Racers is presented in an Unreal Engine 5 park, with the recovered game instructions and collision masks driving the ride.

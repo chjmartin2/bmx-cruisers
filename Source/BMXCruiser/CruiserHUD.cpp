@@ -54,7 +54,7 @@ void ACruiserHUD::DrawHUD(){
   Text(G->MenuPage==1?TEXT("RIDER FIELD GUIDE"):TEXT("THE ORIGINAL / THE CREW"),70,301,3.2,Yellow,true);
   if(G->MenuPage==1){
    Text(TEXT("READ THE LINE. FIND THE GAP."),70,395,2.1,Paper,true);
-   Text(TEXT("Water, bushes, rocks and fences. Eight original screens. One clean ride."),70,458,1.5,Paper);
+   Text(TEXT("Water, bushes, rocks and fences. Five original courses of increasing length."),70,458,1.5,Paper);
    Plate(70,545,1765,205,FLinearColor(.035,.055,.09,.96));
    Text(TEXT("ARROWS / WASD"),105,579,2,Yellow,true);Text(TEXT("MOVE & STEER"),105,637,1.15,Dim);
    Text(TEXT("P / ESC"),700,579,2,Yellow,true);Text(TEXT("PAUSE / RETURN"),700,637,1.15,Dim);
@@ -65,7 +65,7 @@ void ACruiserHUD::DrawHUD(){
    Text(TEXT("BMX RACERS"),70,402,2.3,Paper,true);
    Text(TEXT("Original game programming: David Darling & Richard Darling"),70,468,1.5,Paper);
    Text(TEXT("Original publisher: Mastertronic. Original melody retained and rearranged."),70,521,1.3,Dim);
-   Text(TEXT("BMX CRUISERS / COURSE ONE"),70,608,2,Yellow,true);
+   Text(TEXT("BMX CRUISERS / ALL FIVE COURSES"),70,608,2,Yellow,true);
    Text(TEXT("Riders: Microsoft Rocketbox / MIT. Scenery: Poly Haven & ambientCG / CC0."),70,672,1.3,Paper);
    Text(TEXT("Equipment meshes, trail dressing, animation and presentation authored for this game."),70,720,1.3,Paper);
    Text(TEXT("Cover-inspired artwork adapted using AI. Full source credits and licenses included."),70,774,1.3,Dim);
@@ -84,8 +84,8 @@ void ACruiserHUD::DrawHUD(){
  }else if(Ready){
   bool Workshop=G->MenuPage==3,Settings=G->MenuPage==5;const float Width=Workshop?710:760;Panel(Width);
   Art(TEXT("/Game/UI/Logo.Logo"),52,15,440,246);
-  Text(Workshop?TEXT("RIDER GARAGE"):Settings?TEXT("TUNE THE EXPERIENCE"):TEXT("01 / COUNTRY LANES"),55,268,2.2,Yellow,true);
-  Text(Workshop?TEXT("YOUR LOOK. YOUR RIDE."):Settings?TEXT("PICTURE, SOUND & DISPLAY"):TEXT("EIGHT SCREENS. EVERY GAP COUNTS."),58,315,.9,Dim);
+  Text(Workshop?TEXT("RIDER GARAGE"):Settings?TEXT("TUNE THE EXPERIENCE"):G->MenuPage==7?TEXT("CHOOSE YOUR COURSE"):FString::Printf(TEXT("COURSE %02d / CITY PARK"),G->CourseIndex),55,268,2.2,Yellow,true);
+  Text(Workshop?TEXT("YOUR LOOK. YOUR RIDE."):Settings?TEXT("PICTURE, SOUND & DISPLAY"):TEXT("FIVE ORIGINAL COURSES. EVERY GAP COUNTS."),58,315,.9,Dim);
   const float Top=369,H=Workshop?65:Settings?72:66,Gap=Workshop?15:Settings?26:16;
   for(int I=0;I<Actions.Num();++I)Button(I,55,Top+I*(H+Gap),Width-105,H);
   if(Workshop){
@@ -101,12 +101,12 @@ void ACruiserHUD::DrawHUD(){
   Text(TEXT("ARROWS / TAB  SELECT    ENTER  CONFIRM    ESC  BACK"),55,1045,.83,Paper);
  }else{
   Plate(0,0,480,69,Ink);Plate(742,0,450,69,Ink);Plate(1450,0,470,69,Ink,0);Rect(0,67,1920,2,Red);
-  Text(FString::Printf(TEXT("SCORE  %06d"),G->Simulation->Score()),30,15,1.9,Paper,true);Text(TEXT("COURSE 01"),828,15,1.9,Yellow,true);Text(FString::Printf(TEXT("HI  %06d"),FMath::Max(G->HighScore,G->Simulation->Score())),1580,15,1.9,Paper,true);
+  Text(FString::Printf(TEXT("SCORE  %06d"),(G->ScoreBase+G->Simulation->Score())),30,15,1.9,Paper,true);Text(FString::Printf(TEXT("COURSE %02d"),G->CourseIndex),828,15,1.9,Yellow,true);Text(FString::Printf(TEXT("HI  %06d"),FMath::Max(G->HighScore,(G->ScoreBase+G->Simulation->Score()))),1580,15,1.9,Paper,true);
   Rect(0,1041,1920,39,Ink);Text(TEXT("ARROWS / WASD  STEER     P / ESC  PAUSE     R  RESTART     C  CAMERA     PGUP / PGDN  TILT     + / -  ZOOM"),30,1051,.83,Dim);Text(G->DifficultyName(G->ActiveDifficulty),1720,1051,.88,Yellow,true);
   if(!G->IsMenu()&&Time<G->ViewNoticeUntil){Plate(630,87,700,58,Ink);Text(FString::Printf(TEXT("VIEW  %.0f DEGREES / %.0f%%     HOME: RESET"),G->ViewTilt,G->ViewDistance),660,103,1.1,Yellow,true);}
   if(G->IsMenu()){
    bool Finished=State==BMX::RunState::Complete;float Top=Finished?345:200;Plate(480,Top,970,Finished?675:723,Ink,32);Plate(480,Top,970,7,Red,7);
-   Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?TEXT("COURSE CONQUERED!"):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);
+   Text(G->Paused?TEXT("TAKE A BREATHER"):Finished?(G->CourseIndex==5?TEXT("ALL FIVE CONQUERED!"):TEXT("COURSE CONQUERED!")):TEXT("BACK IN THE SADDLE"),530,Top+38,3,Yellow,true);
    Text(Finished?TEXT("Every gap cleared. Take your victory lap."):TEXT("Find your pace. Then find your line."),534,Top+104,1.2,Dim);
    for(int I=0;I<Actions.Num();++I)Button(I,530,Top+164+I*(Finished?68:78),870,Finished?55:62);
   }

@@ -29,12 +29,12 @@ def spline(ring):
     for _ in range(12):curve=(np.roll(curve,1,axis=0)+2*curve+np.roll(curve,-1,axis=0))/4
     return curve
 
-def smooth(rectangles,min_area):
+def smooth(rectangles,min_area,tolerance=2.75):
     source=union_all([box(x,y,x+w,y+h) for x,y,w,h in rectangles])
     result=[]
     for p in polygons(source):
         if p.area<min_area:continue
-        p=p.simplify(2.75,preserve_topology=True)
+        p=p.simplify(tolerance,preserve_topology=True)
         holes=[spline(h) for h in p.interiors if Polygon(h).area>8]
         result.extend(polygons(make_valid(Polygon(spline(p.exterior),holes))))
     return union_all(result),source
@@ -87,10 +87,16 @@ def trail_edge(geometry):
                 indices.extend([a,b+1,b,a,a+1,b+1])
     return dict(vertices=vertices,indices=indices,colors=colors)
 
-def export():
-    data=json.loads((ROOT/'Content/Data/course1.json').read_text())
-    road,original_road=smooth(data['road_rects'],12)
-    water,original_water=smooth(data['water_rects'],16)
+def export(course=1):
+    data=json.loads((ROOT/f'Content/Data/course{course}.json').read_text(encoding='utf-8'))
+    road,original_road=smooth(data['road_rects'],12,2.75 if course==1 else .5)
+    # Dense later routes have many small corners. Limit their aggregate rounding
+    # gain with sub-pixel offsets, keeping the same area budget as Course One.
+    if course>1:
+        for _ in range(20):
+            if abs(road.area-original_road.area)/original_road.area<.03:break
+            road=road.buffer(-.05 if road.area>original_road.area else .05)
+    water,original_water=smooth(data['water_rects'],16,2.75 if course==1 else .5)
     field=box(-110,-100,430,data['height']*8+100)
     result=dict(format=1,method='Periodic Catmull-Rom after 2.75-pixel contour simplification with circular smoothing',
                 road=mesh(road,0),water=mesh(water,-10),
@@ -121,8 +127,8 @@ def export():
     colors=np.stack([shade*.92,shade,shade*.90,np.ones_like(shade)],axis=-1).reshape(-1,4)
     result['grass_underlay']=mesh(field.difference(water.buffer(.8)),-2)
     result['grass']=dict(vertices=np.round(vertices,3).tolist(),indices=indices,colors=np.round(colors,4).tolist())
-    heights.astype('<f4').tofile(ROOT/'Content/Data/meadow-heights.bin')
-    (ROOT/'Content/Data/course1-visuals.json').write_text(json.dumps(result,separators=(',',':'))+'\n')
+    heights.astype('<f4').tofile(ROOT/('Content/Data/meadow-heights.bin' if course==1 else f'Content/Data/course{course}-meadow.bin'))
+    (ROOT/f'Content/Data/course{course}-visuals.json').write_text(json.dumps(result,separators=(',',':'))+'\n',encoding='utf-8')
     print('Smoothed meshes:',{name:len(result[name]['indices'])//3 for name in ['road','water','grass','waterbed','banks','verge']})
     print('Main road area change:',round(100*(road.area-original_road.area)/original_road.area,3),'percent')
     assert road.is_valid and water.is_valid

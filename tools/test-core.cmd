@@ -14,3 +14,8 @@ if errorlevel 1 exit /b %errorlevel%
 cl /nologo /std:c++17 /O2 /EHsc /W3 /I Source\BMXCruiser tests\steering_pace.cpp Source\BMXCruiser\Core\OriginalSimulation.cpp /Fo:tests\bin\ /Fe:tests\bin\steering_pace.exe
 if errorlevel 1 exit /b %errorlevel%
 tests\bin\steering_pace.exe
+if errorlevel 1 exit /b %errorlevel%
+cl /nologo /std:c++17 /O2 /EHsc /W3 /I Source\BMXCruiser tests\all_courses.cpp Source\BMXCruiser\Core\OriginalSimulation.cpp /Fo:tests\bin\ /Fe:tests\bin\all_courses.exe
+if errorlevel 1 exit /b %errorlevel%
+tests\bin\all_courses.exe
+if errorlevel 1 exit /b %errorlevel%

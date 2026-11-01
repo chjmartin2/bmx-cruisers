@@ -1,0 +1,32 @@
+[
+  {
+    "course": 1,
+    "finish_scroll": 210,
+    "next_sequence_index": 8,
+    "movement_delay": 56
+  },
+  {
+    "course": 2,
+    "finish_scroll": 250,
+    "next_sequence_index": 18,
+    "movement_delay": 48
+  },
+  {
+    "course": 3,
+    "finish_scroll": 375,
+    "next_sequence_index": 33,
+    "movement_delay": 40
+  },
+  {
+    "course": 4,
+    "finish_scroll": 500,
+    "next_sequence_index": 53,
+    "movement_delay": 32
+  },
+  {
+    "course": 5,
+    "finish_scroll": 625,
+    "next_sequence_index": 78,
+    "movement_delay": 3
+  }
+]

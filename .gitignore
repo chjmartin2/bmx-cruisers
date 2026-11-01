@@ -33,6 +33,10 @@ reference/extracted/*
 !reference/extracted/course1-initial-ram.bin
 !reference/extracted/course1-initial-io.bin
 !reference/extracted/course1-completion-replay.json
+!reference/extracted/course2-completion-replay.json
+!reference/extracted/course3-completion-replay.json
+!reference/extracted/course4-completion-replay.json
+!reference/extracted/course5-completion-replay.json
 !reference/extracted/course1-cruise-steering-replay.json
 !reference/extracted/course1-expert-steering-replay.json
 !reference/extracted/scroll-timing.json

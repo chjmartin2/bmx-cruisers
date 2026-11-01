@@ -18,7 +18,7 @@ The irregular timber meshes, curved leaf clusters, gravel detail, meadow geometr
 
 ## BMX Cruisers 0.3 additions
 
-Original game: **BMX Racers**, programmed by David Darling and Richard Darling, published by Mastertronic. The in-game Credits screen acknowledges this source. Only Course One is playable in this recreation.
+Original game: **BMX Racers**, programmed by David Darling and Richard Darling, published by Mastertronic. The in-game Credits screen acknowledges this source. All five original courses are playable in the current development build.
 
 Cover-inspired splash and transparent logo were created with the built-in image generation tool from the cover supplied by the user. New artwork and exact prompts are preserved in `assets/source/branding` and `assets/branding-prompts.md`. These are branding assets, not screenshots of gameplay. No Mastertronic logo is used as the new game's publisher mark.
 
