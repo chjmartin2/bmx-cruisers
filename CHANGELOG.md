@@ -1,5 +1,19 @@
 # Release history
 
+## 1.3.0 — 2026-11-02
+
+- Added Performance (default), Balanced and High graphics presets, independent of gameplay pace and interface resolution. Performance uses up to a 900p scene, fewer decorative details, a smaller streaming pool, no costly dynamic shadows, and a 60-fps cap.
+- Replaced the development preview's coarse 720p/FXAA presentation with 900p temporal reconstruction, sharper texture sampling and fuller low-cost bushes. The interface stays at the window's full resolution. Balanced uses up to 1080p; High retains optional 4K.
+- Switched the default renderer to DirectX 11 / Shader Model 5. Lumen, ray tracing, virtual shadows and real-time sky capture are no longer prerequisites.
+- Replaced large runtime mesh JSON parsing and normal generation with compact validated binary mesh caches. Spatial draw chunks let off-screen terrain stop rendering without changing shorelines, course geometry or water contacts.
+- Removed the duplicate scanned shrub layer from the lighter presets. Added inexpensive opaque crowns so every bush remains visible and readable. Reduced tiny prop geometry, background trees, litter, localized audio streams and decorative update rates.
+- Reduced the Performance fireworks particle budget while retaining their large, vivid bursts. Rider motion, controls, collision and original PAL simulation remain independent of decorative animation rates.
+
+- Restored all swimming pools in Courses 2, 3 and 5 with straight tiled surrounds, the original step notch, ladders, blue water and metal fencing.
+- Restored all parking sections in Courses 3, 4 and 5, including their asphalt, bay markings, red/blue parked cars and oil slicks at the original positions.
+- Corrected shared character-code interpretation: blue cars no longer create false water surfaces, and red car graphics no longer create false bridge rails. Cars and oil have visible, consistent modern contact boundaries.
+- Kept original course sequences, movement, timing and the common footprint for every ride style.
+
 ## 1.2.0 — 2026-11-01
 
 - Restored collision on bridge guardrails and posts, using their displayed thickness and the same rider footprint as other hazards.

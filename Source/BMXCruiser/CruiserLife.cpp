@@ -11,14 +11,17 @@
 #include "Camera/CameraComponent.h"
 
 void ACruiserWorld::BuildLivingPark(const TSharedPtr<FJsonObject>& Data,const TSharedPtr<FJsonObject>& Visual){
+ auto* ParkSphere=GraphicsPreset<2?LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/D_PropSphere.D_PropSphere")):SphereMesh.Get();
+ auto* ParkCylinder=GraphicsPreset<2?LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/D_PropCylinder.D_PropCylinder")):CylinderMesh.Get();
+ if(!ParkSphere)ParkSphere=SphereMesh;if(!ParkCylinder)ParkCylinder=CylinderMesh;
  FFileHelper::LoadFileToArray(CourseCells,*(CourseFile(TEXT("-terrain.bin"))));
  const int H=Data->GetIntegerField(TEXT("height"))*8;FRandomStream R(31985);
  auto Cell=[&](int X,int Y){return X>=0&&X<320&&Y>=0&&Y<H&&CourseCells.IsValidIndex(Y*320+X)?CourseCells[Y*320+X]:uint8(255);};
- auto* Reeds=Instances(CylinderMesh,Materials[4]);auto* Heads=Instances(SphereMesh,Materials[3]);auto* Pebbles=Instances(SphereMesh,Materials[11]);auto* Leaves=Instances(SphereMesh,Materials[4]);auto* Wood=Instances(CylinderMesh,Materials[3]);
+ auto* Reeds=Instances(ParkCylinder,Materials[4]);auto* Heads=Instances(ParkSphere,Materials[3]);auto* Pebbles=Instances(ParkSphere,Materials[11]);auto* Leaves=Instances(ParkSphere,Materials[4]);auto* Wood=Instances(ParkCylinder,Materials[3]);
  auto RodInstance=[&](UInstancedStaticMeshComponent* M,FVector A,FVector B,float Radius){M->AddInstance(FTransform(FRotationMatrix::MakeFromZ(B-A).Rotator(),(A+B)*.5,FVector(Radius/50,Radius/50,(B-A).Size()/100)));};
  // Sample water-edge cells rather than adding hazards to any original opening.
  for(int Y=8;Y<H-8;Y+=4)for(int X=8;X<312;X+=4){
-  if(Cell(X,Y)!=2)continue;
+  if(Cell(X,Y)!=2||IsOriginalSite(Y*7.5,(X-160)*7.5))continue;
   bool Shore=Cell(X-4,Y)==0||Cell(X+4,Y)==0||Cell(X,Y-4)==0||Cell(X,Y+4)==0;
   if(!Shore&&Cell(X-7,Y)==2&&Cell(X+7,Y)==2&&Cell(X,Y-7)==2&&Cell(X,Y+7)==2&&R.FRand()<.014){
    FVector P(Y*7.5,(X-160)*7.5,-8);WaterCenters.Add(P);
@@ -34,7 +37,7 @@ void ACruiserWorld::BuildLivingPark(const TSharedPtr<FJsonObject>& Data,const TS
  }
  // The original movement clamps sprite X to 24..321. These verge stones and
  // low rope posts mark those limits; no new collision or invisible wall exists.
- auto* Stakes=Instances(CylinderMesh,Materials[3]);auto* Rope=Instances(CylinderMesh,Materials[13]);auto* Caps=Instances(SphereMesh,Materials[12]);
+ auto* Stakes=Instances(ParkCylinder,Materials[3]);auto* Rope=Instances(ParkCylinder,Materials[13]);auto* Caps=Instances(ParkSphere,Materials[12]);
  for(float Side:{-1150.f,1157.5f}){
   TArray<FVector> Attachments;
   for(float X=-300;X<H*7.5+600;X+=260){
@@ -55,36 +58,37 @@ void ACruiserWorld::BuildLivingPark(const TSharedPtr<FJsonObject>& Data,const TS
   }
  }
  // Irregular fallen foliage and twigs enrich the verge, without altering a path.
- auto* Litter=Instances(SphereMesh,Materials[13]);Litter->SetCastShadow(false);
- for(int N=0;N<2400;++N){int X=R.RandRange(0,319),Y=R.RandRange(0,H-1);if(Cell(X,Y)!=0)continue;
+ auto* Litter=Instances(ParkSphere,Materials[13]);Litter->SetCastShadow(false);
+ for(int N=0;N<(GraphicsPreset==0?180:GraphicsPreset==1?700:2400);++N){int X=R.RandRange(0,319),Y=R.RandRange(0,H-1);if(Cell(X,Y)!=0)continue;
   FVector P(Y*7.5,(X-160)*7.5,1);Litter->AddInstance(FTransform(FRotator(0,R.FRand()*360,0),P,FVector(R.FRandRange(.025,.07),.025,.005)));
   if(N%9==0)RodInstance(Wood,P,P+FVector(R.FRandRange(5,20),R.FRandRange(-10,10),1),.55);
  }
  // A distant tree line provides scale and depth beyond the playable meadow.
- auto* Trunks=Instances(CylinderMesh,Materials[3]);auto* Crowns=Instances(SphereMesh,Materials[4]);
- for(int N=0;N<180;++N){float X=R.FRandRange(-1300,H*7.5+1600),Y=(N%2?-1:1)*R.FRandRange(2050,3300),Z=R.FRandRange(260,520);RodInstance(Trunks,FVector(X,Y,-4),FVector(X,Y,Z),R.FRandRange(8,15));
-  for(int C=0;C<6;++C)Crowns->AddInstance(FTransform(FRotator(R.FRand()*25,R.FRand()*360,0),FVector(X+R.FRandRange(-100,100),Y+R.FRandRange(-100,100),Z+R.FRandRange(-40,130)),FVector(R.FRandRange(1.6,3),R.FRandRange(1.6,3),R.FRandRange(1.9,3.6))));
+ auto* Trunks=Instances(ParkCylinder,Materials[3]);auto* Crowns=Instances(ParkSphere,Materials[4]);
+ for(int N=0;N<(GraphicsPreset==0?36:GraphicsPreset==1?80:180);++N){float X=R.FRandRange(-1300,H*7.5+1600),Y=(N%2?-1:1)*R.FRandRange(2050,3300),Z=R.FRandRange(260,520);RodInstance(Trunks,FVector(X,Y,-4),FVector(X,Y,Z),R.FRandRange(8,15));
+  for(int C=0;C<(GraphicsPreset==0?2:GraphicsPreset==1?4:6);++C)Crowns->AddInstance(FTransform(FRotator(R.FRand()*25,R.FRand()*360,0),FVector(X+R.FRandRange(-100,100),Y+R.FRandRange(-100,100),Z+R.FRandRange(-40,130)),FVector(R.FRandRange(1.6,3),R.FRandRange(1.6,3),R.FRandRange(1.9,3.6))));
  }
  // Small bird flocks fly well above the course. Ducks remain on broad water.
- for(int N=0;N<18;++N){auto* Root=NewObject<USceneComponent>(this);AddInstanceComponent(Root);Root->SetupAttachment(Scene);Root->RegisterComponent();
+ for(int N=0;N<(GraphicsPreset==0?6:GraphicsPreset==1?10:18);++N){auto* Root=NewObject<USceneComponent>(this);AddInstanceComponent(Root);Root->SetupAttachment(Scene);Root->RegisterComponent();
   bool Duck=N<6&&WaterCenters.Num();FVector P=Duck?WaterCenters[(N*7)%WaterCenters.Num()]+FVector(0,0,10):FVector(R.FRandRange(300,H*7.5),R.FRandRange(-900,900),R.FRandRange(200,460));Root->SetRelativeLocation(P);Wildlife.Add(Root);WildlifeOrigins.Add(P);
-  Part(SphereMesh,Duck?Materials[13].Get():Materials[10].Get(),FVector::ZeroVector,FVector(Duck?.19:.1,Duck?.12:.05,Duck?.12:.05),Root);
-  Part(SphereMesh,Duck?Materials[4].Get():Materials[10].Get(),FVector(9,0,Duck?10:2),FVector(.065,.06,.07),Root);
+  Part(ParkSphere,Duck?Materials[13].Get():Materials[10].Get(),FVector::ZeroVector,FVector(Duck?.19:.1,Duck?.12:.05,Duck?.12:.05),Root);
+  Part(ParkSphere,Duck?Materials[4].Get():Materials[10].Get(),FVector(9,0,Duck?10:2),FVector(.065,.06,.07),Root);
   Part(CubeMesh,Materials[16],FVector(15,0,Duck?10:2),FVector(.055,.045,.02),Root);
-  for(int S:{-1,1}){auto* Wing=Part(SphereMesh,Materials[10],FVector(-2,S*8,0),FVector(.12,.15,.014),Root);Wings.Add(Wing);}
+  for(int S:{-1,1}){auto* Wing=Part(ParkSphere,Materials[10],FVector(-2,S*8,0),FVector(.12,.15,.014),Root);Wings.Add(Wing);}
  }
  // Localized water and birds: attenuation is tied to park positions, not UI.
  FFileHelper::LoadFileToArray(NaturePCM,*(FPaths::ProjectContentDir()/TEXT("Audio/waterside.pcm")));
- for(int N=0;N<FMath::Min(12,WaterCenters.Num());++N){auto* A=NewObject<UAudioComponent>(this);AddInstanceComponent(A);A->SetupAttachment(Scene);A->SetRelativeLocation(WaterCenters[N*WaterCenters.Num()/FMath::Min(12,WaterCenters.Num())]);A->bAutoActivate=false;A->bAllowSpatialization=true;A->bOverrideAttenuation=true;A->AttenuationOverrides.bAttenuate=true;A->AttenuationOverrides.bSpatialize=true;A->AttenuationOverrides.AttenuationShapeExtents=FVector(100);A->AttenuationOverrides.FalloffDistance=1200;
+ for(int N=0;N<FMath::Min(GraphicsPreset==0?0:GraphicsPreset==1?3:8,WaterCenters.Num());++N){auto* A=NewObject<UAudioComponent>(this);AddInstanceComponent(A);A->SetupAttachment(Scene);A->SetRelativeLocation(WaterCenters[N*WaterCenters.Num()/FMath::Min(12,WaterCenters.Num())]);A->bAutoActivate=false;A->bAllowSpatialization=true;A->bOverrideAttenuation=true;A->AttenuationOverrides.bAttenuate=true;A->AttenuationOverrides.bSpatialize=true;A->AttenuationOverrides.AttenuationShapeExtents=FVector(100);A->AttenuationOverrides.FalloffDistance=1200;
   auto* S=NewObject<USoundWaveProcedural>(A);S->SetSampleRate(48000);S->NumChannels=2;S->Duration=INDEFINITELY_LOOPING_DURATION;S->QueueAudio(NaturePCM.GetData(),NaturePCM.Num());NatureAudio.Add(A);NatureStreams.Add(S);A->SetSound(S);A->SetVolumeMultiplier(.22);A->RegisterComponent();A->Play();
  }
  Ripples=NewObject<UProceduralMeshComponent>(this);AddInstanceComponent(Ripples);Ripples->SetupAttachment(Scene);Ripples->SetCollisionEnabled(ECollisionEnabled::NoCollision);Ripples->RegisterComponent();Ripples->SetCastShadow(false);
  Ripples->SetMaterial(0,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Ripple.M_Ripple")));
- Dust=Instances(SphereMesh,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Dust.M_Dust")));Dust->SetCastShadow(false);for(int N=0;N<40;++N)Dust->AddInstance(FTransform(FVector(0,0,-200)));
- CrashDroplets=Instances(SphereMesh,Materials[12]);CrashDroplets->SetCastShadow(false);CrashDroplets->SetVisibility(false);
+ Dust=Instances(ParkSphere,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Dust.M_Dust")));Dust->SetCastShadow(false);for(int N=0;N<40;++N)Dust->AddInstance(FTransform(FVector(0,0,-200)));
+ CrashDroplets=Instances(ParkSphere,Materials[12]);CrashDroplets->SetCastShadow(false);CrashDroplets->SetVisibility(false);
  for(int N=0;N<64;++N)CrashDroplets->AddInstance(FTransform(FVector(0,0,-200)));
- Fireworks=Instances(CylinderMesh,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_FireworkStreak.M_FireworkStreak")));Fireworks->SetCastShadow(false);Fireworks->SetNumCustomDataFloats(4);
- for(int N=0;N<FireworkBursts*(FireworkRays*FireworkTrail+1);++N)Fireworks->AddInstance(FTransform(FRotator::ZeroRotator,FVector(0,0,-200),FVector::ZeroVector));Fireworks->SetVisibility(false);
+ Fireworks=Instances(ParkCylinder,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_FireworkStreak.M_FireworkStreak")));Fireworks->SetCastShadow(false);Fireworks->SetNumCustomDataFloats(4);
+ const int Bursts=GraphicsPreset==0?6:GraphicsPreset==1?8:FireworkBursts,Rays=GraphicsPreset==0?32:GraphicsPreset==1?64:FireworkRays,Trails=GraphicsPreset==0?2:GraphicsPreset==1?3:FireworkTrail;
+ for(int N=0;N<Bursts*(Rays*Trails+1);++N)Fireworks->AddInstance(FTransform(FRotator::ZeroRotator,FVector(0,0,-200),FVector::ZeroVector));Fireworks->SetVisibility(false);
  UE_LOG(LogTemp,Display,TEXT("Living park ready: %d ripple sites, %d wildlife; marked original X limits 24..321"),WaterCenters.Num(),Wildlife.Num());
 }
 void ACruiserWorld::UpdateLivingPark(float Dt){
@@ -95,7 +99,8 @@ void ACruiserWorld::UpdateLivingPark(float Dt){
   P+=FVector(FMath::Sin(Phase)* (Duck?12:170),FMath::Cos(Phase*.7)*(Duck?10:90),Duck?FMath::Sin(T*2+N)*.7:FMath::Sin(Phase*2)*14);Wildlife[N]->SetRelativeLocation(P);Wildlife[N]->SetRelativeRotation(FRotator(0,Duck?FMath::Sin(Phase)*35:90+FMath::RadiansToDegrees(Phase),0));
   for(int S=0;S<2;++S)Wings[N*2+S]->SetRelativeRotation(FRotator(0,0,Duck?0:(S?1:-1)*FMath::Sin(T*8+N)*35));
  }
- if(Ripples){
+ if(Ripples)Ripples->SetVisibility(GraphicsPreset>0||(CrashWasWater&&CrashTime>=0&&CrashTime<2));
+ if(Ripples&&(GraphicsPreset>0||(CrashWasWater&&CrashTime>=0&&CrashTime<2))){
   const int PreviousVertexCount=RippleVertices.Num();
   RippleVertices.Reset();RippleIndices.Reset();RippleNormals.Reset();RippleUV.Reset();RippleColors.Reset();
   float X=Rider->GetRelativeLocation().X;
@@ -124,31 +129,32 @@ void ACruiserWorld::UpdateLivingPark(float Dt){
  if(CelebrationTime>=0)CelebrationTime+=Dt;
  if(Fireworks&&Fireworks->IsVisible()!=(CelebrationTime>=0))Fireworks->SetVisibility(CelebrationTime>=0);
  if(Fireworks&&CelebrationTime>=0){
+  const int Bursts=GraphicsPreset==0?6:GraphicsPreset==1?8:FireworkBursts,Rays=GraphicsPreset==0?32:GraphicsPreset==1?64:FireworkRays,Trails=GraphicsPreset==0?2:GraphicsPreset==1?3:FireworkTrail;
   const FLinearColor Palette[]={FLinearColor(1,.002f,.0004f),FLinearColor(.001f,1,.003f),FLinearColor(1,.32f,.004f),FLinearColor(.004f,.13f,1),FLinearColor(.001f,.8f,1),FLinearColor(1,.004f,.18f),FLinearColor(1,.82f,.38f)};
   auto Streak=[&](int Index,FVector A,FVector B,float Radius,FLinearColor C,float Brightness){FVector D=B-A;FRotator Rotation=D.IsNearlyZero()?FRotator::ZeroRotator:FRotationMatrix::MakeFromZ(D).Rotator();Fireworks->UpdateInstanceTransform(Index,FTransform(Rotation,(A+B)*.5,FVector(Radius/50,Radius/50,D.Size()/100)),false,false);Fireworks->SetCustomDataValue(Index,0,C.R);Fireworks->SetCustomDataValue(Index,1,C.G);Fireworks->SetCustomDataValue(Index,2,C.B);Fireworks->SetCustomDataValue(Index,3,Brightness*(C.G>.7f&&C.B>.5f?1.f:.12f));
    // Keep the colored core vivid after daylight tone mapping; world-space
    // emissive meshes supply bloom, while the final pass preserves the hue.
    if(Radius>0&&Brightness>50&&FMath::Min(A.Z,B.Z)>FenceGroundHeight((A.X+B.X)*.5f,(A.Y+B.Y)*.5f)+2)CelebrationSparks.Add({Fireworks->GetComponentTransform().TransformPosition(A),Fireworks->GetComponentTransform().TransformPosition(B),C,Radius,FMath::Clamp(Brightness/5000,0.f,1.f)});
   };
-  for(int Burst=0;Burst<FireworkBursts;++Burst){
+  for(int Burst=0;Burst<Bursts;++Burst){
    float Age=FMath::Fmod(CelebrationTime+Burst*.47f,5.2f)-.7f;
    FVector Center=Rider->GetRelativeLocation()+FVector(-300+(Burst%3)*130,(Burst%2?1:-1)*(550+(Burst%3)*230),950+(Burst%2)*70);
-   int Rocket=FireworkBursts*FireworkRays*FireworkTrail+Burst;
+   int Rocket=Bursts*Rays*Trails+Burst;
    FVector RocketHead=Center-FVector(0,0,-Age*850);
    Streak(Rocket,Age<0?RocketHead-FVector(0,0,115):Center-FVector(0,0,8),Age<0?RocketHead:Center+FVector(0,0,8),Age<0?3.f:Age<.16f?22*(1-Age/.16f):0.f,FLinearColor(1,.82f,.4f),Age<0?22000:150000);
-   for(int Ray=0;Ray<FireworkRays;++Ray){
-    float A=Ray*2.39996f+Burst*.6f,B=FMath::Acos(1-2*(Ray+.5f)/FireworkRays);
+   for(int Ray=0;Ray<Rays;++Ray){
+    float A=Ray*2.39996f+Burst*.6f,B=FMath::Acos(1-2*(Ray+.5f)/Rays);
     FVector Direction(FMath::Cos(A)*FMath::Sin(B),FMath::Sin(A)*FMath::Sin(B),FMath::Cos(B));
     float Speed=650+(Burst%3)*90+FMath::Sin(Ray*7.1f)*90;
     auto Point=[&](float T){T=FMath::Max(0.f,T);return Center+Direction*(Speed/.40f)*(1-FMath::Exp(-.40f*T))+FVector(0,0,-65*T*T);};
-    for(int Trail=0;Trail<FireworkTrail;++Trail){
+    for(int Trail=0;Trail<Trails;++Trail){
      float SparkAge=Age-Trail*.045f,Tail=Age>1.9f?.015f:.055f;
      float Fade=FMath::Pow(FMath::Clamp(1-SparkAge/3.2f,0.f,1.f),1.25f)*(1-Trail*.17f);
      if(Age<0||SparkAge<0||SparkAge>3.2f||(Age>1.8f&&FMath::Sin(Age*43+Ray*13.7f+Trail)<-.25f))Fade=0;
      FLinearColor C=Ray%9==0||Trail==0?FLinearColor(1,.92f,.72f):Palette[Burst%UE_ARRAY_COUNT(Palette)];
      float Radius=(Age>1.9f?2.8f:4.2f)*(1-Trail*.14f)*(Fade>0?1:0);
      float Glow=Trail==0||Ray%9==0?65000:((Burst%7)==3?26000:(Burst%7)==0?14000:18000);
-     Streak((Burst*FireworkRays+Ray)*FireworkTrail+Trail,Point(SparkAge-Tail),Point(SparkAge),Trail==0?Radius*.35f:Radius,C,Fade*Glow);
+     Streak((Burst*Rays+Ray)*Trails+Trail,Point(SparkAge-Tail),Point(SparkAge),Trail==0?Radius*.35f:Radius,C,Fade*Glow);
     }
    }
   }

@@ -5,6 +5,7 @@ import sys, json, hashlib, shutil
 import numpy as np
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'.tools/python'))
 from py65.devices.mpu6502 import MPU
+from course_features import restore_types
 
 ROOT=Path(__file__).resolve().parents[1]
 RAM_PATH=ROOT/'reference/extracted/course1-initial-ram.bin'
@@ -91,6 +92,7 @@ def export(course=1,ram_path=None,io_path=None):
               water_rects=rectangles(terrain==2),ground_rects=rectangles(terrain!=2),
               finish_black_rects=rectangles(finish_black),finish_white_rects=rectangles(finish_white),
               shrubs=props,fences=fence)
+    restore_types(data)
     target=ROOT/'Content/Data';target.mkdir(parents=True,exist_ok=True)
     (target/f'course{course}.json').write_text(json.dumps(data,separators=(',',':'))+'\n',encoding='utf-8')
     (target/f'course{course}-collision.bin').write_bytes(solid.tobytes())

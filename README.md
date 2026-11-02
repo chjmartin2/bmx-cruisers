@@ -2,9 +2,21 @@
 
 A native Windows Unreal Engine 5.8.4 game that presents the recovered C64 logic for all five courses in a 3D park. The title is BMX Cruisers; the original BMX Racers is acknowledged in Credits.
 
-Version 1.2 refines all five shorelines, adds vivid finish fireworks and visible crash reactions, and restores solid bridge guardrails. All five original courses, one-life play, unrestricted practice and controller riding are included.
+Version 1.3 optimizes every graphics preset and restores the original swimming pools, parking areas, parked cars and oil slicks. All five courses, one-life play, unrestricted practice, controller riding, smooth shorelines, visible crashes and finish fireworks are included.
 
-[Download Windows 1.2](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.2.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
+See [the restored-object table and verification notes](docs/ALL-COURSES.md#original-objects-restored-in-13) for the pools and car parks in the later courses.
+
+The game defaults to DirectX 11 and a lightweight Performance preset with a sharper 900p scene, temporal reconstruction and a full-resolution interface. Prebuilt spatial mesh chunks and simpler lighting reduce work in every mode. Balanced and High retain more decoration and shadows, with optional 4K in High. Normal play is capped at 60 fps. See [performance measurements and validation limits](docs/PERFORMANCE.md).
+
+[Download Windows 1.3](https://github.com/chjmartin2/bmx-cruisers/releases/tag/v1.3.0) · [Project website](https://retrocomputerist.com/projects/bmx-cruisers/) · [Release notes](CHANGELOG.md)
+
+![Course One in version 1.3 — actual High preset gameplay](preview/beta/course-one-1.3.png)
+
+![The restored Course Two swimming pool — actual Balanced preset inspection capture](preview/beta/pool-course2-1.3.png)
+
+![The restored Course Three car park — actual Balanced preset inspection capture](preview/beta/parking-course3-1.3.png)
+
+The trailer below shows version 1.2. It predates the graphics presets and restored pools and car parks. No new video accompanies 1.3.
 
 [![Watch the version 1.2 trailer: Commodore 64 to Unreal Engine 5](preview/beta/trailer-1.2.jpg)](https://www.youtube.com/watch?v=GMSA1Eg3nrI)
 
@@ -18,7 +30,7 @@ Version 1.2 refines all five shorelines, adds vivid finish fireworks and visible
 
 For the release ZIP, extract everything and run **BMXCruiser.exe**. See [installation, controls and limitations](docs/PLAY.md). In a development checkout, open **Play BMX Cruisers.cmd**. Keep the whole Windows build folder together. The compatibility launcher **Play BMX Cruiser.cmd** forwards to the new name.
 
-The game supports a fitted desktop window and single-monitor borderless fullscreen. F11 toggles between them. Picture detail (1080p or 4K) changes the scene render target without enlarging the desktop window or spanning multiple displays. A shared logical HUD layout preserves text and mouse alignment at different DPI settings and aspect ratios.
+The game supports a fitted desktop window and single-monitor borderless fullscreen. F11 toggles between them. Performance renders up to 900p, Balanced up to 1080p, and High offers 1080p or 4K without enlarging the desktop window or spanning multiple displays. A shared logical HUD layout preserves text and mouse alignment at different DPI settings and aspect ratios.
 
 ## Controls
 
@@ -125,4 +137,4 @@ Play Game starts at Course One with one life. A crash ends the run, and restarti
 
 The original row loader and finish routine determine the course boundaries and native movement settings. Finish scroll counts are 210, 250, 375, 500 and 625. The later stages begin with the actual post-finish screen and loader state recovered from the original. The HUD score carries forward when continuing between courses; direct selection starts a new score. Per-course records remain separate.
 
-Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. Supply -BuildPath and -ReplayDirectory for a custom packaged folder and modern-geometry fixtures. The version 1.2 trailer opens with authentic C64 emulator footage and shows the current Windows presentation. The archived 1.0 trailer shows the earlier Course One release.
+Run tools/export_all_courses.py to recover the later courses and regenerate their smooth visuals. Run tools/verify-all-courses.ps1 to exercise all five packaged courses and every next-course transition using collision-enabled replays. Supply -BuildPath and -ReplayDirectory for a custom packaged folder and modern-geometry fixtures. The version 1.2 trailer opens with authentic C64 emulator footage and shows the earlier 1.2 Windows presentation. The archived 1.0 trailer shows the earlier Course One release.

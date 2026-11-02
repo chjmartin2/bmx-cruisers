@@ -19,6 +19,12 @@ if (!(Test-Path -LiteralPath (Join-Path $projectRoot 'Content/Characters/HeroHea
     if ($LASTEXITCODE -ne 0) { throw 'The installed MetaHuman templates could not be restored.' }
 }
 $assetMarker = Join-Path $projectRoot 'Content/Data/assets-ready.json'
+if(!(Test-Path -LiteralPath (Join-Path $projectRoot 'Content/Models/D_PropSphere.uasset')) -or !(Test-Path -LiteralPath (Join-Path $projectRoot 'Content/Models/D_PropCylinder.uasset'))){
+    $editor = Join-Path $EnginePath 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
+    $propScript=(Join-Path $PSScriptRoot 'prepare_performance_assets.py').Replace('\','/')
+    & $editor $projectFile -run=pythonscript "-script=$propScript" -unattended -nosplash -NullRHI -stdout -FullStdOutLogOutput
+    if($LASTEXITCODE -ne 0){throw 'Performance park props could not be prepared.'}
+}
 if ($PrepareAssets -or !(Test-Path -LiteralPath $assetMarker)) {
     if (Test-Path -LiteralPath $assetMarker) { Remove-Item -LiteralPath $assetMarker }
     $editor = Join-Path $EnginePath 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'

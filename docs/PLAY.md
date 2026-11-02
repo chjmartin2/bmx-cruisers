@@ -2,7 +2,11 @@
 
 Extract the entire folder and run BMXCruiser.exe. Keep the Engine and BMXCruiser subfolders beside it. Unreal Editor is not required. If the Microsoft runtime is missing, run Engine/Extras/Redist/en-us/vc_redist.x64.exe.
 
-Target: 64-bit Windows 10/11 with a DirectX 12 / Shader Model 6 capable GPU. Start at 1080p. Press F11 for single-monitor fullscreen; 1/2 selects 1080p/4K scene detail. Minimum hardware requirements have not been verified across a range of systems.
+Target: 64-bit Windows 10/11 with a DirectX 11 / Shader Model 5 capable graphics device. An integrated GPU can use the new Performance preset; a discrete gaming card, DirectX 12 and ray tracing are not required. Hardware minimums remain provisional until tested on a wider range of PCs.
+
+Version 1.3 starts in Performance: up to a 900p scene with temporal reconstruction, a sharp full-resolution interface, reduced decorative density and a 60-fps limit. Settings > Graphics offers Performance, Balanced (up to 1080p with conventional shadows) and High (more decoration, 1080p or optional 4K). Changing Graphics on the start-screen settings page reloads the selected course. No graphics setting changes speed, collision, course layout or scoring. Use Performance on laptops and older computers. Keep the laptop plugged in for the best performance.
+
+Press F11 for single-monitor fullscreen. The window/interface size is independent of scene detail. Keys 1/2 select the High preset's 1080p/4K preference; they do not raise the Performance or Balanced rendering budget.
 
 Select Play Game for a one-life run from Course One through Course Five. A crash ends the game. Continue after each finish to keep the run alive. Only completing all five courses in order on the same pace qualifies for the High Score Board. R abandons a game and starts again at Course One; pace is fixed during a game.
 

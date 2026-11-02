@@ -4,6 +4,7 @@
 #include "Modules/ModuleManager.h"
 #include "CruiserHUD.h"
 #include "Core/RunRules.h"
+#include "Core/SceneCache.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -56,6 +57,9 @@ ACruiserWorld::ACruiserWorld() {
     Rider=CreateDefaultSubobject<USceneComponent>(TEXT("Rider"));Rider->SetupAttachment(Scene);
     Terrain=CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("OriginalCourse"));Terrain->SetupAttachment(Scene);
     Terrain->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // Meadow, roads and water receive shadows but need not project an entire
+    // course-sized non-Nanite mesh into every virtual-shadow-map page.
+    Terrain->SetCastShadow(false);
     VehicleRoot=CreateDefaultSubobject<USceneComponent>(TEXT("Vehicle"));VehicleRoot->SetupAttachment(Rider);
     Bicycle=CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("BicycleWheels"));Bicycle->SetupAttachment(VehicleRoot);
     Bicycle->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -89,7 +93,7 @@ UStaticMeshComponent* ACruiserWorld::Rod(FVector A,FVector B,float Radius,UMater
 UInstancedStaticMeshComponent* ACruiserWorld::Instances(UStaticMesh* Mesh,UMaterialInterface* Material) {
     auto* Component=NewObject<UInstancedStaticMeshComponent>(this);
     AddInstanceComponent(Component);Component->SetupAttachment(Scene);
-    Component->SetStaticMesh(Mesh);for(int32 Slot=0;Slot<FMath::Max(1,Mesh->GetStaticMaterials().Num());++Slot)Component->SetMaterial(Slot,Material);
+    Component->SetStaticMesh(Mesh);for(int32 Slot=0;Slot<(Mesh?FMath::Max(1,Mesh->GetStaticMaterials().Num()):1);++Slot)Component->SetMaterial(Slot,Material);
     Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);Component->SetCanEverAffectNavigation(false);
     Component->RegisterComponent();return Component;
 }
@@ -146,6 +150,7 @@ void ACruiserWorld::BeginPlay() {
     FParse::Value(FCommandLine::Get(),TEXT("HelmetColor="),HelmetColor);HelmetColor=FMath::Clamp(HelmetColor,0,7);
     FParse::Value(FCommandLine::Get(),TEXT("BikeColor="),BikeColor);BikeColor=FMath::Clamp(BikeColor,0,7);
     FParse::Value(FCommandLine::Get(),TEXT("MenuPage="),MenuPage);
+    const TCHAR* Page=GetWorld()->URL.GetOption(TEXT("MenuPage="),TEXT(""));if(*Page)MenuPage=FCString::Atoi(Page);
     FParse::Value(FCommandLine::Get(),TEXT("MenuFocus="),MenuFocus);
     if(!VideoCaptureDirectory.IsEmpty())UsingController=FParse::Param(FCommandLine::Get(),TEXT("TrailerController"));
     FParse::Value(FCommandLine::Get(),TEXT("PreviewOrbit="),PreviewOrbit);
@@ -206,6 +211,7 @@ void ACruiserWorld::PlayGame(){
     UGameplayStatics::OpenLevel(this,TEXT("CourseOne"),true,FString::Printf(TEXT("Course=1?Start=1?ScoreBase=0?Game=1?Cleared=0?RunPace=%d"),DifficultyIndex));
 }
 bool ACruiserWorld::BuildCourse() {
+    const double BuildStarted=FPlatformTime::Seconds();
     const TCHAR* Names[]={TEXT("Grass"),TEXT("Asphalt"),TEXT("Water"),TEXT("Wood"),TEXT("Foliage"),TEXT("Metal"),TEXT("Rubber"),TEXT("Blue"),TEXT("Purple"),TEXT("Skin"),TEXT("Dark"),TEXT("Rock"),TEXT("White"),TEXT("Bank"),TEXT("Verge"),TEXT("FlowerWhite"),TEXT("FlowerYellow"),TEXT("FlowerPurple"),TEXT("FlowerRed"),TEXT("Shoreline")};
     for(const auto* Name:Names){
         FString Path=FString::Printf(TEXT("/Game/Materials/M_%s.M_%s"),Name,Name);
@@ -244,64 +250,51 @@ bool ACruiserWorld::BuildCourse() {
         UE_LOG(LogTemp,Display,TEXT("FINISH TERRAIN section %d: %s, minimum clearance %.3f cm"),Section,MinClearance>=Height-.01f?TEXT("PASSED"):TEXT("FAILED"),MinClearance);
     };
     FString VisualText;TSharedPtr<FJsonObject> Visual;
-    if(!FFileHelper::LoadFileToString(VisualText,*(CourseFile(TEXT("-visuals.json"))))||
+    if(!FFileHelper::LoadFileToString(VisualText,*(CourseFile(TEXT("-scene.json"))))||
        !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(VisualText),Visual)||!Visual.IsValid())return false;
+    FCruiserSceneCache CachedMeshes;if(!LoadCruiserSceneCache(CourseFile(TEXT("-scene.bin")),CachedMeshes))return false;
+    TArray<uint8> Heights;if(!FFileHelper::LoadFileToArray(Heights,*(CourseIndex==1?FPaths::ProjectContentDir()/TEXT("Data/meadow-heights.bin"):CourseFile(TEXT("-meadow.bin"))))||Heights.Num()%sizeof(float))return false;
+    GroundHeights.SetNumUninitialized(Heights.Num()/sizeof(float));FMemory::Memcpy(GroundHeights.GetData(),Heights.GetData(),Heights.Num());
     MeadowGridVertices=Visual->HasField(TEXT("meadow_grid_vertices"))?Visual->GetIntegerField(TEXT("meadow_grid_vertices")):0;
     auto SmoothSurface=[&](const TCHAR* Field,int Section,UMaterialInterface* Material){
-        const auto Mesh=Visual->GetObjectField(Field);
-        TArray<FVector> Vertices,Normals;TArray<int32> Indices;TArray<FVector2D> UV;
-        for(const auto& Value:Mesh->GetArrayField(TEXT("vertices"))){
-            auto P=Value->AsArray();FVector V(P[0]->AsNumber(),P[1]->AsNumber(),P[2]->AsNumber());
-            // Extend only the decorative outer underlay for the wider camera.
-            // Interior water openings and the original playable terrain stay intact.
-            if(FCString::Strcmp(Field,TEXT("grass_underlay"))==0){
-                if(V.Y<=-2025)V.Y=-8000;else if(V.Y>=2025)V.Y=8000;
-                if(V.X<=-750)V.X=-6000;else if(V.X>=(Data->GetIntegerField(TEXT("height"))*8+100)*7.5)V.X=(Data->GetIntegerField(TEXT("height"))*8+100)*7.5+6000;
-            }
-            Vertices.Add(V);Normals.Add(FVector::UpVector);UV.Add(FVector2D(V.X/200,V.Y/200));
-        }
-        for(const auto& Value:Mesh->GetArrayField(TEXT("indices")))Indices.Add(Value->AsNumber());
-        TArray<FLinearColor> Colors;
-        if(Mesh->HasField(TEXT("colors")))for(auto Value:Mesh->GetArrayField(TEXT("colors"))){auto C=Value->AsArray();Colors.Add(FLinearColor(C[0]->AsNumber(),C[1]->AsNumber(),C[2]->AsNumber(),C[3]->AsNumber()));}
-        if(FCString::Strcmp(Field,TEXT("banks"))==0||FCString::Strcmp(Field,TEXT("grass"))==0){
-            for(auto& Normal:Normals)Normal=FVector::ZeroVector;
-            for(int i=0;i<Indices.Num();i+=3){
-                int A=Indices[i],B=Indices[i+1],C=Indices[i+2];FVector N=FVector::CrossProduct(Vertices[C]-Vertices[A],Vertices[B]-Vertices[A]).GetSafeNormal();
-                Normals[A]+=N;Normals[B]+=N;Normals[C]+=N;
-            }
-            for(auto& Normal:Normals)Normal.Normalize();
-        }
-        if(FCString::Strcmp(Field,TEXT("water"))==0){
+        auto* Chunks=CachedMeshes.Find(Field);if(!Chunks)return;
+        for(auto& Chunk:*Chunks){auto& Vertices=Chunk.Vertices;auto& Indices=Chunk.Indices;
+        if(FCString::Strcmp(Field,TEXT("water"))==0||FCString::Strcmp(Field,TEXT("pool_water"))==0){
             for(int I=0;I<Indices.Num();I+=3){FVector2D A(Vertices[Indices[I]]),B(Vertices[Indices[I+1]]),C(Vertices[Indices[I+2]]);FWaterTriangle T;T.A=A;T.B=B;T.C=C;T.Bounds=FBox2D(A,A);T.Bounds+=B;T.Bounds+=C;WaterContacts.Add(T);}
         }
-        Terrain->CreateMeshSection_LinearColor(Section,Vertices,Indices,Normals,UV,Colors,TArray<FProcMeshTangent>(),false);
-        Terrain->SetMaterial(Section,Material);
+        if(Indices.IsEmpty())continue;
+        auto* Draw=NewObject<UProceduralMeshComponent>(this);AddInstanceComponent(Draw);Draw->SetupAttachment(Scene);Draw->SetCollisionEnabled(ECollisionEnabled::NoCollision);Draw->SetCastShadow(false);Draw->SetCanEverAffectNavigation(false);Draw->RegisterComponent();
+        Draw->CreateMeshSection_LinearColor(0,Vertices,Indices,Chunk.Normals,Chunk.UV,Chunk.Colors,TArray<FProcMeshTangent>(),false);Draw->SetMaterial(0,Material);
+        }
     };
     SmoothSurface(TEXT("grass"),0,Materials[0]);SmoothSurface(TEXT("road"),1,Materials[1]);
     SmoothSurface(TEXT("water"),2,Materials[2]);SmoothSurface(TEXT("waterbed"),5,Materials[13]);
     SmoothSurface(TEXT("banks"),6,Materials[19]);SmoothSurface(TEXT("verge"),7,Materials[14]);
     SmoothSurface(TEXT("grass_underlay"),8,Materials[0]);
+    SmoothSurface(TEXT("parking"),9,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_Parking.M_Parking")));
+    SmoothSurface(TEXT("pool_water"),10,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_PoolWater.M_PoolWater")));
+    SmoothSurface(TEXT("pool_deck"),11,LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_PoolTiles.M_PoolTiles")));
+    BuildOriginalSites(Visual);
     Surface(TEXT("finish_black_rects"),3,Materials[10],2);
     Surface(TEXT("finish_white_rects"),4,Materials[12],2);
-    auto* ShrubMesh=LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/Shrub.Shrub"));
-    auto* GrassMesh=LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/LawnGrass.LawnGrass"));
-    if(!ShrubMesh||!GrassMesh)return false;
-    UE_LOG(LogTemp,Display,TEXT("Shrub bounds: %s. Grass bounds: %s"),*ShrubMesh->GetBounds().BoxExtent.ToString(),*GrassMesh->GetBounds().BoxExtent.ToString());
+    auto* ShrubMesh=GraphicsPreset==2?LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/Shrub.Shrub")):nullptr;
+    auto* GrassMesh=GraphicsPreset==2?LoadObject<UStaticMesh>(nullptr,TEXT("/Game/Models/LawnGrass.LawnGrass")):nullptr;
+    if(GraphicsPreset==2&&(!ShrubMesh||!GrassMesh))return false;
     TArray<UStaticMesh*> ShrubVariants;TArray<UInstancedStaticMeshComponent*> ShrubInstances;
-    for(int i=0;i<9;++i){
+    for(int i=0;GraphicsPreset==2&&i<9;++i){
         FString Asset=FString::Printf(TEXT("/Game/Models/Shrub_%d.Shrub_%d"),i,i);
         if(auto* Variant=LoadObject<UStaticMesh>(nullptr,*Asset)){
             ShrubVariants.Add(Variant);auto* Group=Instances(Variant,Materials[4]);Group->SetCullDistances(8000,10000);ShrubInstances.Add(Group);
         }
     }
     auto* DenseMaterial=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_DenseFoliage.M_DenseFoliage"));
-    for(int i=0;i<4;++i){
+    for(int i=0;GraphicsPreset==2&&i<4;++i){
         FString Asset=FString::Printf(TEXT("/Game/Models/DenseShrub_%d.DenseShrub_%d"),i,i);
         if(auto* Variant=LoadObject<UStaticMesh>(nullptr,*Asset)){
             ShrubVariants.Add(Variant);auto* Group=Instances(Variant,DenseMaterial?DenseMaterial:Materials[4].Get());Group->SetCullDistances(8000,10000);ShrubInstances.Add(Group);
         }
     }
-    if(ShrubVariants.IsEmpty()){ShrubVariants.Add(ShrubMesh);ShrubInstances.Add(Instances(ShrubMesh,Materials[4]));}
+    if(GraphicsPreset==2&&ShrubVariants.IsEmpty()){ShrubVariants.Add(ShrubMesh);ShrubInstances.Add(Instances(ShrubMesh,Materials[4]));}
     TArray<UInstancedStaticMeshComponent*> Flowers;
     for(int i=15;i<19;++i){auto* Group=Instances(SphereMesh,Materials[i]);Group->SetCastShadow(false);Flowers.Add(Group);}
     auto* FlowerCenters=Instances(SphereMesh,Materials[16]);
@@ -327,6 +320,8 @@ bool ACruiserWorld::BuildCourse() {
             continue;
         }
         FVisibleObstacle Bush;Bush.A=FVector2D(X,Y);Bush.Radius=FVector2D(D*.33,W*.33);Bush.Ellipse=true;VisibleObstacles.Add(Bush);
+        // DressCourse draws every shrub even without the optional scanned layer.
+        if(GraphicsPreset<2)continue;
         int Variant=ShrubVariants.Num()>9&&Random.FRand()<.8?Random.RandRange(9,ShrubVariants.Num()-1):Random.RandRange(0,ShrubVariants.Num()-1);const auto SB=ShrubVariants[Variant]->GetBounds();
         FRotator Rotation(0,Random.FRandRange(0,360),0);float R=FMath::DegreesToRadians(Rotation.Yaw);
         float ExtX=FMath::Abs(FMath::Cos(R))*SB.BoxExtent.X+FMath::Abs(FMath::Sin(R))*SB.BoxExtent.Y;
@@ -384,7 +379,7 @@ bool ACruiserWorld::BuildCourse() {
     auto* GrassMaterial=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Materials/M_LawnGrass.M_LawnGrass"));
     auto* Grass=Instances(GrassMesh,GrassMaterial?GrassMaterial:Materials[4].Get());Grass->SetCullDistances(4600,6500);
     Grass->SetCastShadow(false);Grass->bAffectDistanceFieldLighting=false;
-    const auto GB=GrassMesh->GetBounds();
+    const auto GB=GrassMesh?GrassMesh->GetBounds():FBoxSphereBounds(FBox(FVector(-1),FVector(1)));
     TArray<uint8> Meadow;FFileHelper::LoadFileToArray(Meadow,*((CourseIndex==1?FPaths::ProjectContentDir()/TEXT("Data/meadow-heights.bin"):CourseFile(TEXT("-meadow.bin")))));
     auto GrassHeight=[&](float PX,float PY){
         constexpr int Columns=136;int Rows=Meadow.Num()/int(sizeof(float))/Columns;
@@ -394,12 +389,13 @@ bool ACruiserWorld::BuildCourse() {
         return FMath::Lerp(FMath::Lerp(At(X,Y),At(X+1,Y),GX-X),FMath::Lerp(At(X,Y+1),At(X+1,Y+1),GX-X),GY-Y);
     };
     TArray<uint8> ShoreMask;FFileHelper::LoadFileToArray(ShoreMask,*CourseFile(TEXT("-shore-mask.bin")));
-    for(int i=0;i<55000;++i){
+    for(int i=0;GraphicsPreset==2&&i<18000;++i){
         int PX=Random.RandRange(-90,409),PY=Random.RandRange(0,Data->GetIntegerField(TEXT("height"))*8-1);
         if(PX>=0&&PX<320&&(!TerrainCells.IsValidIndex(PY*320+PX)||TerrainCells[PY*320+PX]!=0))continue;
         if(PX>=0&&PX<320&&ShoreMask.IsValidIndex(PY*320+PX)&&ShoreMask[PY*320+PX])continue;
         bool OnFinish=false;for(const auto& Bounds:FinishFootprints)if(Bounds.IsInside(FVector2D(PY*7.5,(PX-160)*7.5))){OnFinish=true;break;}
         if(OnFinish)continue;
+        if(IsOriginalSite(PY*7.5,(PX-160)*7.5))continue;
         float Size=Random.FRandRange(5,8)/FMath::Max(1.f,float(GB.BoxExtent.Z*2));FVector Scale(Size);
         FRotator Rotation(0,Random.FRand()*360,0);
         FVector Offset=Rotation.RotateVector(FVector(GB.Origin.X*Scale.X,GB.Origin.Y*Scale.Y,(GB.Origin.Z-GB.BoxExtent.Z)*Scale.Z));
@@ -408,7 +404,8 @@ bool ACruiserWorld::BuildCourse() {
     DressCourse(Data,Visual);BuildLivingPark(Data,Visual);BuildTrailCharacter();
     WaterContactBuckets.Reset();ObstacleContactBuckets.Reset();
     for(int I=0;I<WaterContacts.Num();++I)for(int X=FMath::FloorToInt(WaterContacts[I].Bounds.Min.X/300);X<=FMath::FloorToInt(WaterContacts[I].Bounds.Max.X/300);++X)WaterContactBuckets.FindOrAdd(X).Add(I);
-    for(int I=0;I<VisibleObstacles.Num();++I){const auto& O=VisibleObstacles[I];double Low=O.Ellipse?O.A.X-O.Radius.X:FMath::Min(O.A.X,O.B.X),High=O.Ellipse?O.A.X+O.Radius.X:FMath::Max(O.A.X,O.B.X);for(int X=FMath::FloorToInt((Low-18)/300);X<=FMath::FloorToInt((High+18)/300);++X)ObstacleContactBuckets.FindOrAdd(X).Add(I);}
+    for(int I=0;I<VisibleObstacles.Num();++I){const auto& O=VisibleObstacles[I];double Low=(O.Ellipse||O.Box)?O.A.X-O.Radius.X:FMath::Min(O.A.X,O.B.X),High=(O.Ellipse||O.Box)?O.A.X+O.Radius.X:FMath::Max(O.A.X,O.B.X);for(int X=FMath::FloorToInt((Low-18)/300);X<=FMath::FloorToInt((High+18)/300);++X)ObstacleContactBuckets.FindOrAdd(X).Add(I);}
+    if(FParse::Param(FCommandLine::Get(),TEXT("VerifySiteFeatures"))&&!VerifyOriginalSites(Visual))return false;
     if(FParse::Param(FCommandLine::Get(),TEXT("BakeContacts"))){
         int32 Width=481,Height=FMath::CeilToInt((Data->GetIntegerField(TEXT("height"))*60+600)/5.f);
         TArray<uint8> Bytes;Bytes.SetNumUninitialized(8+Width*Height);FMemory::Memcpy(Bytes.GetData(),&Width,4);FMemory::Memcpy(Bytes.GetData()+4,&Height,4);
@@ -451,6 +448,7 @@ bool ACruiserWorld::BuildCourse() {
         UE_LOG(LogTemp,Display,TEXT("VISIBLE CONTACTS course %d: %s; %d obstacles; %d water triangles"),CourseIndex,Good?TEXT("PASSED"):TEXT("FAILED"),VisibleObstacles.Num(),WaterContacts.Num());
         if(!Good)return false;
     }
+    UE_LOG(LogTemp,Display,TEXT("COURSE BUILD course %d: %.2f ms; preset %d; packed spatial mesh cache"),CourseIndex,(FPlatformTime::Seconds()-BuildStarted)*1000,GraphicsPreset);
     return true;
 }
 
@@ -475,14 +473,16 @@ void ACruiserWorld::CreateLighting() {
     FillLight->SetMobility(EComponentMobility::Movable);Fill->SetActorRotation(FRotator(-60,-20,0));
     FillLight->SetIntensity(5500);FillLight->SetLightColor(FLinearColor(.80,.88,1));FillLight->SetCastShadows(false);
     FillLight->SetForwardShadingPriority(0);
-    GetWorld()->SpawnActor<ASkyAtmosphere>();
+    if(GraphicsPreset>0)GetWorld()->SpawnActor<ASkyAtmosphere>();
     auto* Sky=GetWorld()->SpawnActor<ASkyLight>();Sky->GetLightComponent()->SetMobility(EComponentMobility::Movable);
-    Sky->GetLightComponent()->SetRealTimeCaptureEnabled(true);Sky->GetLightComponent()->SetIntensity(1.6);
+    Sky->GetLightComponent()->SetRealTimeCaptureEnabled(false);Sky->GetLightComponent()->SetIntensity(1.6);
+    Sky->GetLightComponent()->RecaptureSky();
+    SunComponent->SetDynamicShadowDistanceMovableLight(GraphicsPreset==2?9000:4500);
     auto* Post=GetWorld()->SpawnActor<APostProcessVolume>();Post->bUnbound=true;
     auto& P=Post->Settings;P.bOverride_AutoExposureMethod=true;P.AutoExposureMethod=AEM_Histogram;
     P.bOverride_AutoExposureMinBrightness=true;P.bOverride_AutoExposureMaxBrightness=true;P.AutoExposureMinBrightness=13.3;P.AutoExposureMaxBrightness=13.3;
     P.bOverride_MotionBlurAmount=true;P.MotionBlurAmount=0;P.bOverride_BloomIntensity=true;P.BloomIntensity=.12;
-    P.bOverride_AmbientOcclusionIntensity=true;P.AmbientOcclusionIntensity=.55;
+    P.bOverride_AmbientOcclusionIntensity=true;P.AmbientOcclusionIntensity=GraphicsPreset==2?.55:0;
     P.bOverride_AmbientOcclusionRadius=true;P.AmbientOcclusionRadius=65;
     P.bOverride_ColorSaturation=true;P.ColorSaturation=FVector4(.94,.94,.94,1);
     P.bOverride_ColorContrast=true;P.ColorContrast=FVector4(1,1,1,1);
@@ -720,8 +720,13 @@ void ACruiserWorld::Tick(float DeltaSeconds) {
         PedalPhase+=(Now-Before)*8;
     }
     PoseHumanRider();
+    PreviewOriginalSite();
     if(!VideoCaptureDirectory.IsEmpty()&&FParse::Param(FCommandLine::Get(),TEXT("TrailerCamera")))ViewTilt=FMath::Lerp(32.f,57.f,FMath::Clamp((VerificationTime-4)/6,0.f,1.f));
-    UpdateLivingPark(DeltaSeconds);UpdateAudio();VerifyAppearance(DeltaSeconds);
+    DecorationElapsed+=DeltaSeconds;
+    if(DecorationElapsed>=DecorationInterval||CelebrationTime>=0||IsCrashReacting()){
+        UpdateLivingPark(DecorationElapsed);DecorationElapsed=0;
+    }
+    UpdateAudio();VerifyAppearance(DeltaSeconds);
     if(FParse::Param(FCommandLine::Get(),TEXT("CaptureMenu"))&&!MenuCaptured){MenuCaptureDelay+=DeltaSeconds;if(MenuCaptureDelay>3){MenuCaptured=true;FScreenshotRequest::RequestScreenshot(TEXT("BMXCruiser-title"),true,true);}}
     if(!VideoCaptureDirectory.IsEmpty()&&VerificationTime>=VideoCaptureStart&&(!FParse::Param(FCommandLine::Get(),TEXT("CaptureFinishOnly"))||CelebrationTime>=0)){
         FScreenshotRequest::RequestScreenshot(VideoCaptureDirectory/FString::Printf(TEXT("frame-%06d.jpg"),VideoCaptureFrame++),true,false);

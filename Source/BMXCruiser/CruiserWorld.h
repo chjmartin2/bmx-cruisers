@@ -75,6 +75,8 @@ public:
     void SetResolution(bool UHD);
     void ToggleFullscreen();
     bool UHDQuality=false;
+    int32 GraphicsPreset=0; // Performance, Balanced, High; independent of pace.
+    void SetGraphicsPreset(int32 Index);
     static const TCHAR* DifficultyName(int32 Index);
     FString Failure;
     // Cosmetic settings are deliberately separate from OriginalSimulation.
@@ -202,6 +204,9 @@ private:
     void InitializeDisplay();
     void ApplyDisplayMode(bool Fullscreen);
     void UpdateDisplayQuality();
+    void ApplyGraphicsPreset();
+    float DecorationInterval=0,DecorationElapsed=0;
+    TArray<float> GroundHeights;
     bool Previous1080=false,Previous4K=false,PreviousFullscreen=false;
     bool PreviousScreenshot=false;
     TArray<int32> ReplayInputs;
@@ -216,7 +221,7 @@ private:
     float LastPosePhase=-1;
     BMX::RunState PreviousState=BMX::RunState::Invalid;
     bool BuildCourse();
-    struct FVisibleObstacle{FVector2D A,B,Radius;bool Ellipse=false;};
+    struct FVisibleObstacle{FVector2D A,B,Radius;bool Ellipse=false,Box=false;};
     TArray<FVisibleObstacle> VisibleObstacles;
     struct FWaterTriangle{FVector2D A,B,C;FBox2D Bounds;};
     TArray<FWaterTriangle> WaterContacts;
@@ -231,6 +236,12 @@ private:
     bool SweepVisibleContact(FVector From,FVector To,bool* Water=nullptr)const;
     float FenceGroundHeight(float X,float Y) const;
     void DressCourse(const TSharedPtr<class FJsonObject>& Data,const TSharedPtr<class FJsonObject>& Visual);
+    void BuildOriginalSites(const TSharedPtr<class FJsonObject>& Visual);
+    bool VerifyOriginalSites(const TSharedPtr<class FJsonObject>& Visual)const;
+    bool IsOriginalSite(float X,float Y)const;
+    void PreviewOriginalSite();
+    TArray<FBox2D> SiteExclusions;
+    TMap<FString,FVector> SitePreviewTargets;
     void BuildRider();
     void BuildHumanRider();
     void PoseHumanRider();

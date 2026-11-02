@@ -16,7 +16,8 @@ bool ACruiserWorld::VisibleContact(FVector Position,bool* Water)const{
   }
   const auto* Obstacles=ObstacleContactBuckets.Find(FMath::FloorToInt(P.X/300));
   if(Obstacles)for(int Index:*Obstacles){const auto& O=VisibleObstacles[Index];
-   if(O.Ellipse){FVector2D D=P-O.A;double X=D.X/(O.Radius.X+Radius),Y=D.Y/(O.Radius.Y+Radius);if(X*X+Y*Y<=1)return true;}
+   if(O.Box){FVector2D D=P-O.A;double X=FMath::Max(0.,FMath::Abs(D.X)-O.Radius.X),Y=FMath::Max(0.,FMath::Abs(D.Y)-O.Radius.Y);if(X*X+Y*Y<=Radius*Radius)return true;}
+   else if(O.Ellipse){FVector2D D=P-O.A;double X=D.X/(O.Radius.X+Radius),Y=D.Y/(O.Radius.Y+Radius);if(X*X+Y*Y<=1)return true;}
    else {FVector2D V=O.B-O.A;double U=FMath::Clamp(FVector2D::DotProduct(P-O.A,V)/FMath::Max(1.,V.SizeSquared()),0.,1.);if((P-(O.A+V*U)).SizeSquared()<=FMath::Square(O.Radius.X+Radius))return true;}
   }
  }

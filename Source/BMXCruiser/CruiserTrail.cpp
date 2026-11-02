@@ -5,7 +5,7 @@
 namespace {struct FTrailMesh{TArray<FVector> V,N;TArray<int32>I;TArray<FVector2D>UV;TArray<FLinearColor>C;};}
 void ACruiserWorld::BuildTrailCharacter(){
  FRandomStream Random(4021985);TMap<int32,FTrailMesh> Chunks;int H=CourseCells.Num()/320;
- auto Road=[&](int X,int Y){return X>=0&&X<320&&Y>=0&&Y<H&&CourseCells[Y*320+X]==1;};
+ auto Road=[&](int X,int Y){return X>=0&&X<320&&Y>=0&&Y<H&&CourseCells[Y*320+X]==1&&!IsOriginalSite(Y*7.5,(X-160)*7.5);};
  auto Point=[&](FTrailMesh& G,FVector P,FLinearColor C){int I=G.V.Num();G.V.Add(P);G.N.Add(FVector::UpVector);G.UV.Add(FVector2D(P.X/80,P.Y/80));G.C.Add(C);return I;};
  auto Patch=[&](float PX,float PY,float RX,float RY,FLinearColor Color){
   auto& G=Chunks.FindOrAdd(FMath::FloorToInt(PY*7.5f/1200));FVector P(PY*7.5,(PX-160)*7.5,.18);int Center=Point(G,P,Color);int B=G.V.Num();

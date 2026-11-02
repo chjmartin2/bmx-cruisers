@@ -13,6 +13,8 @@ Visual trail and shoreline meshes use periodic Catmull-Rom curves fitted to the 
 Short-lawn PBR material: ambientCG, Grass 004, CC0 1.0, https://ambientcg.com/view?id=Grass004. The original 2K download and source maps are retained in `assets/source/ambientcg-grass004`; download provenance and file hashes are recorded in `assets/manifest.json`.
 # Authored game assets
 
+The restored parked-car meshes (body panels, glazing, trim, lamps and wheels), swimming-pool walls/coping/ladders, parking markings and oil patches are authored procedural geometry. Their placement comes from the original map glyphs and colors. The parking asphalt, automotive finishes, pool tile/water and oil-sheen material graphs were authored locally; no outside car or pool models were downloaded.
+
 The irregular timber meshes, curved leaf clusters, gravel detail, meadow geometry, sky and weathering material graphs were authored for BMX Cruiser. The new stereo arrangement retains the recovered game melody; its bass/chord arrangement, percussion, synthesized park ambience and foley-style effects were authored for this prototype. These sound effects are synthesized, rather than field recordings.
 
 

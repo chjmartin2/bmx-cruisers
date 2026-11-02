@@ -1,7 +1,7 @@
 param([switch]$UHD,[string]$BuildPath='',[string]$ReplayDirectory='tests/replays/visible',[switch]$OriginalCollision)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
-if(!$BuildPath){foreach($candidate in @('Build/BridgeRails/Windows','Build/CrashFeedback/Windows','Build/PolishedPark/Windows','Build/Release1.1Final/Windows','Build/Release1.1Game/Windows','Build/Windows/Windows','Build/Windows')){if(Test-Path -LiteralPath (Join-Path $root ($candidate+'/BMXCruiser.exe'))){$BuildPath=$candidate;break}}}
+if(!$BuildPath){foreach($candidate in @('Build/Release1.3/Windows','Build/PerformanceFinal/Windows','Build/OriginalSites/Windows','Build/BridgeRails/Windows','Build/CrashFeedback/Windows','Build/PolishedPark/Windows','Build/Release1.1Final/Windows','Build/Release1.1Game/Windows','Build/Windows/Windows','Build/Windows')){if(Test-Path -LiteralPath (Join-Path $root ($candidate+'/BMXCruiser.exe'))){$BuildPath=$candidate;break}}}
 $exe=Join-Path (Join-Path $root $BuildPath) 'BMXCruiser/Binaries/Win64/BMXCruiser.exe'
 $save=Join-Path (Join-Path $root $BuildPath) 'BMXCruiser/Saved/SaveGames/BMXCruiser.sav'
 $backup=Join-Path $root 'release-work/campaign-preferences.sav'

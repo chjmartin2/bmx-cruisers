@@ -435,6 +435,8 @@ def prepare():
     ue.EditorLoadingAndSavingUtils.new_blank_map(False)
     ue.EditorLoadingAndSavingUtils.save_map(ue.EditorLevelLibrary.get_editor_world(),'/Game/Maps/CourseOne')
     ue.EditorAssetLibrary.save_directory('/Game',only_if_is_dirty=False,recursive=True)
+    exec((ROOT/'tools/prepare_site_materials.py').read_text(),globals())
+    exec((ROOT/'tools/prepare_performance_assets.py').read_text(),globals())
     (ROOT/'Content/Data/assets-ready.json').write_text(json.dumps(dict(ready=True,engine=ue.SystemLibrary.get_engine_version()))+'\n')
     ue.log('BMX CRUISER ASSETS READY')
 

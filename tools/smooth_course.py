@@ -9,6 +9,7 @@ from shapely.geometry import box,Polygon,MultiPolygon
 from shapely.geometry.polygon import orient
 import mapbox_earcut
 import shapely
+from course_features import extract as extract_features
 
 def polygons(geometry):
     if isinstance(geometry,Polygon):return [geometry]
@@ -31,7 +32,7 @@ def spline(ring):
     return curve
 
 def smooth(rectangles,min_area,tolerance=2.75):
-    source=union_all([box(x,y,x+w,y+h) for x,y,w,h in rectangles])
+    source=rectangles if hasattr(rectangles,'geom_type') else union_all([box(x,y,x+w,y+h) for x,y,w,h in rectangles])
     result=[]
     for p in polygons(source):
         if p.area<min_area:continue
@@ -56,7 +57,7 @@ def mesh(geometry,z):
     return dict(vertices=vertices,indices=indices)
 
 def smooth_water(rectangles):
-    source=union_all([box(x,y,x+w,y+h) for x,y,w,h in rectangles])
+    source=rectangles if hasattr(rectangles,'geom_type') else union_all([box(x,y,x+w,y+h) for x,y,w,h in rectangles])
     water=source.simplify(.7,preserve_topology=True)
     # Filter at uniform physical distances, rather than once per raster corner.
     # The old unevenly sampled filter left the 8-pixel source steps visible.
@@ -164,38 +165,58 @@ def trail_edge(geometry):
 
 def export(course=1):
     data=json.loads((ROOT/f'Content/Data/course{course}.json').read_text(encoding='utf-8'))
-    road,original_road=smooth(data['road_rects'],12,2.75 if course==1 else .5)
+    features=extract_features(data)
+    pool_zone=union_all([box(*p['bounds']) for p in features['pools']])
+    parking_core=union_all([box(*p['bounds']) for p in features['parking_lots']])
+    raw_road=union_all([box(x,y,x+w,y+h) for x,y,w,h in data['road_rects']])
+    parking=parking_core
+    for p in features['parking_lots']:
+        x0,y0,x1,y1=p['bounds']
+        parking=parking.union(raw_road.intersection(box(0,y0,320,y1)))
+    road_source=raw_road.difference(pool_zone.union(parking))
+    # Raster-to-spline only applies to natural trails. Car parks and pool
+    # surrounds have authored straight edges and retain their source footprint.
+    road,original_road=smooth(road_source,12,2.75 if course==1 else .5)
     # Dense later routes have many small corners. Limit their aggregate rounding
     # gain with sub-pixel offsets, keeping the same area budget as Course One.
     if course>1:
         for _ in range(20):
             if abs(road.area-original_road.area)/original_road.area<.03:break
             road=road.buffer(-.05 if road.area>original_road.area else .05)
-    water,original_water=smooth_water(data['water_rects'])
+    natural_rects=[];pool_rects=[]
+    for r in data['water_rects']:
+        x,y,w,h=r
+        (pool_rects if pool_zone.covers(box(x,y,x+w,y+h)) else natural_rects).append(r)
+    natural_source=union_all([box(x,y,x+w,y+h) for x,y,w,h in natural_rects]).difference(parking)
+    water,original_water=smooth_water(natural_source)
+    pool_water=union_all([box(x,y,x+w,y+h) for x,y,w,h in pool_rects])
     outer_bank=water.buffer(5,quad_segs=8)
     field=box(-110,-100,430,data['height']*8+100)
     result=dict(format=2,method='Catmull-Rom road; arc-length Gaussian shoreline with clipped meadow and blended sloping bank',
                 road=mesh(road,0),water=mesh(water,-10),
                 waterbed=mesh(water.buffer(.85),-38),banks=bank(water),shoreline_samples=shoreline_samples(water),
-                verge=trail_edge(road))
+                verge=trail_edge(road),site_features=features,
+                parking=mesh(parking,.12),pool_water=mesh(pool_water,-10),
+                pool_deck=mesh(pool_zone.difference(pool_water),.14))
     # Only the meadow undulates. Rideable asphalt and every obstacle stay in the
     # original plane, so terrain dressing cannot change a gap or the riding line.
     import shapely
     gx=np.arange(-110,434,4,dtype=float);gy=np.arange(-100,data['height']*8+104,4,dtype=float)
     xx,yy=np.meshgrid(gx,gy);points=shapely.points(xx.ravel(),yy.ravel())
-    flat=union_all([road,outer_bank]);shapely.prepare(flat)
+    flat=union_all([road,outer_bank,pool_zone,parking]);shapely.prepare(flat)
     distance=np.where(shapely.contains(flat,points),0,boundary_distance(flat,points)).reshape(xx.shape)
     fade=np.clip((distance-2)/12,0,1)
     world_x=yy*7.5;world_y=(xx-160)*7.5
     heights=-2+fade*(16+11*np.sin(world_x/330)*np.sin(world_y/240)+9*np.sin(world_x/510+world_y/340)+3*np.sin(world_x/93+world_y/143))
     heights=np.maximum(heights,-2)
     vertices=np.stack([world_x,world_y,heights],axis=-1).reshape(-1,3)
-    result['grass_underlay']=mesh(field.difference(outer_bank),-3)
+    land=field.difference(union_all([outer_bank,pool_zone,parking]))
+    result['grass_underlay']=mesh(land,-3)
     result['grass_underlay']['colors']=[[*meadow_color(x,y),1] for x,y,z in result['grass_underlay']['vertices']]
     result['meadow_grid_vertices']=len(vertices)
-    result['grass']=clipped_meadow(np.round(vertices,3),len(gx),field.difference(outer_bank))
+    result['grass']=clipped_meadow(np.round(vertices,3),len(gx),land)
     px,py=np.meshgrid(np.arange(320,dtype=float),np.arange(data['height']*8,dtype=float))
-    shapely.contains(water.buffer(5.5),shapely.points(px,py)).astype('uint8').tofile(ROOT/f'Content/Data/course{course}-shore-mask.bin')
+    shapely.contains(union_all([water.buffer(5.5),pool_zone,parking]),shapely.points(px,py)).astype('uint8').tofile(ROOT/f'Content/Data/course{course}-shore-mask.bin')
     heights.astype('<f4').tofile(ROOT/('Content/Data/meadow-heights.bin' if course==1 else f'Content/Data/course{course}-meadow.bin'))
     (ROOT/f'Content/Data/course{course}-visuals.json').write_text(json.dumps(result,separators=(',',':'))+'\n',encoding='utf-8')
     print('Smoothed meshes:',{name:len(result[name]['indices'])//3 for name in ['road','water','grass','waterbed','banks','verge']})
@@ -203,4 +224,6 @@ def export(course=1):
     print('Water area change:',round(100*(water.area-original_water.area)/original_water.area,3),'percent')
     assert road.is_valid and water.is_valid
     assert abs(road.area-original_road.area)/original_road.area<.03
+    from bake_scene_cache import bake
+    bake(course)
 if __name__=='__main__':export()

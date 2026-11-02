@@ -11,8 +11,36 @@
 #include "Misc/Parse.h"
 #include "Misc/ConfigCacheIni.h"
 #include "UnrealClient.h"
+#include "Kismet/GameplayStatics.h"
+
+void ACruiserWorld::ApplyGraphicsPreset(){
+ auto Set=[](const TCHAR* Name,int Value){if(auto* V=IConsoleManager::Get().FindConsoleVariable(Name))V->Set(Value,ECVF_SetByCode);};
+ Set(TEXT("r.DynamicGlobalIlluminationMethod"),0);Set(TEXT("r.ReflectionMethod"),0);Set(TEXT("r.Shadow.Virtual.Enable"),0);
+ Set(TEXT("r.SSR.Quality"),GraphicsPreset==2?2:0);Set(TEXT("r.AmbientOcclusionLevels"),GraphicsPreset==2?1:0);
+ Set(TEXT("r.ShadowQuality"),GraphicsPreset==0?0:3);Set(TEXT("r.Shadow.CSM.MaxCascades"),GraphicsPreset==2?3:1);
+ Set(TEXT("r.Shadow.MaxResolution"),GraphicsPreset==2?2048:512);Set(TEXT("r.Streaming.PoolSize"),GraphicsPreset==0?384:GraphicsPreset==1?512:1024);
+ Set(TEXT("r.Streaming.MipBias"),0);Set(TEXT("r.MaxAnisotropy"),GraphicsPreset==0?4:8);
+ Set(TEXT("r.Tonemapper.Sharpen"),GraphicsPreset==0?1:0);
+ Set(TEXT("r.VolumetricFog"),0);Set(TEXT("r.MotionBlurQuality"),0);Set(TEXT("r.BloomQuality"),GraphicsPreset==0?1:3);
+ Set(TEXT("t.MaxFPS"),60);
+ DecorationInterval=GraphicsPreset==0?1.f/20:GraphicsPreset==1?1.f/30:0;
+ UE_LOG(LogTemp,Display,TEXT("GRAPHICS PRESET %d: no Lumen, ray tracing or virtual shadows; decoration %.0f Hz"),GraphicsPreset,DecorationInterval>0?1/DecorationInterval:60);
+}
+
+void ACruiserWorld::SetGraphicsPreset(int32 Index){
+ GraphicsPreset=FMath::Clamp(Index,0,2);
+ GConfig->SetInt(TEXT("BMXCruiser.Display"),TEXT("GraphicsPreset"),GraphicsPreset,GGameUserSettingsIni);
+ GConfig->SetInt(TEXT("BMXCruiser.Display"),TEXT("PerformanceVersion"),1,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);
+ // This setting is offered on the start-screen settings page; rebuilding the
+ // selected course applies its decoration budget without touching run scores.
+ UGameplayStatics::OpenLevel(this,TEXT("CourseOne"),true,FString::Printf(TEXT("Course=%d?MenuPage=5"),CourseIndex));
+}
 
 void ACruiserWorld::InitializeDisplay(){
+    int Version=0;GConfig->GetInt(TEXT("BMXCruiser.Display"),TEXT("PerformanceVersion"),Version,GGameUserSettingsIni);
+    if(Version>=1)GConfig->GetInt(TEXT("BMXCruiser.Display"),TEXT("GraphicsPreset"),GraphicsPreset,GGameUserSettingsIni);
+    FParse::Value(FCommandLine::Get(),TEXT("GraphicsPreset="),GraphicsPreset);GraphicsPreset=FMath::Clamp(GraphicsPreset,0,2);
+    ApplyGraphicsPreset();
     GConfig->GetBool(TEXT("BMXCruiser.Display"),TEXT("UHDQuality"),UHDQuality,GGameUserSettingsIni);
     int Quality=0;if(FParse::Value(FCommandLine::Get(),TEXT("RenderQuality="),Quality))UHDQuality=Quality>=2160;
     if(GIsEditor||FParse::Param(FCommandLine::Get(),TEXT("RenderOffscreen"))){DisplayReady=true;return;}
@@ -66,7 +94,9 @@ void ACruiserWorld::UpdateDisplayQuality(){
     if(!DisplayReady)ApplyDisplayMode(DesiredFullscreen);
     auto* Client=GetWorld()->GetGameViewport();if(!Client||!Client->Viewport)return;
     FIntPoint Size=Client->Viewport->GetSizeXY();if(Size.X<=0||Size.Y<=0)return;
-    float Percent=BMX::RenderPercentage(Size.X,Size.Y,UHDQuality);
+    const float ViewHeight=FMath::Max(1.f,FMath::Min(float(Size.Y),Size.X*9.f/16));
+    const float Target=GraphicsPreset==0?900.f:GraphicsPreset==1?1080.f:UHDQuality?2160.f:1080.f;
+    float Percent=FMath::Clamp(100*Target/ViewHeight,25.f,GraphicsPreset==2?200.f:100.f);
     if(Size==LastDisplaySize&&FMath::IsNearlyEqual(Percent,LastRenderPercentage))return;
     auto& Console=IConsoleManager::Get();
     if(auto* CVar=Console.FindConsoleVariable(TEXT("r.SecondaryScreenPercentage.GameViewport")))CVar->Set(100.f,ECVF_SetByCode);
@@ -74,8 +104,8 @@ void ACruiserWorld::UpdateDisplayQuality(){
     if(auto* CVar=Console.FindConsoleVariable(TEXT("r.ScreenPercentage")))CVar->Set(Percent,ECVF_SetByCode);
     // Temporal upscalers accept up to 200%; smaller windows use full-resolution
     // temporal AA followed by spatial downsampling for the larger scene buffer.
-    if(auto* CVar=Console.FindConsoleVariable(TEXT("r.AntiAliasingMethod")))CVar->Set(Percent>200.01f?2:4,ECVF_SetByCode);
-    if(auto* CVar=Console.FindConsoleVariable(TEXT("r.TemporalAA.Upsampling")))CVar->Set(Percent>200.01f?0:1,ECVF_SetByCode);
+    if(auto* CVar=Console.FindConsoleVariable(TEXT("r.AntiAliasingMethod")))CVar->Set(2,ECVF_SetByCode);
+    if(auto* CVar=Console.FindConsoleVariable(TEXT("r.TemporalAA.Upsampling")))CVar->Set(1,ECVF_SetByCode);
     LastDisplaySize=Size;LastRenderPercentage=Percent;
-    UE_LOG(LogTemp,Display,TEXT("Display quality: %s, viewport %dx%d, scene scale %.2f%%, window unchanged"),UHDQuality?TEXT("4K"):TEXT("1080p"),Size.X,Size.Y,Percent);
+    UE_LOG(LogTemp,Display,TEXT("Display quality: preset %d target %.0fp, viewport %dx%d, scene scale %.2f%%, window unchanged"),GraphicsPreset,Target,Size.X,Size.Y,Percent);
 }

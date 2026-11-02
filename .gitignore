@@ -62,3 +62,5 @@ Content/Characters/HeroHead*.uasset
 Content/Characters/HeroTextures/Hero_color.uasset
 Content/Characters/HeroTextures/Hero_eye.uasset
 Content/Characters/HeroTextures/Hero_normal.uasset
+Content/Models/D_PropSphere.uasset
+Content/Models/D_PropCylinder.uasset

@@ -21,7 +21,7 @@ TArray<FName> ACruiserWorld::MenuActions()const{
     if(MenuPage<2)return {TEXT("continue")};
     if(MenuPage==3)return {TEXT("gender"),TEXT("skin"),TEXT("outfit"),TEXT("helmet"),TEXT("bikecolor"),TEXT("style"),TEXT("back")};
     if(MenuPage==4)return {TEXT("back")};
-    if(MenuPage==5)return {TEXT("music"),TEXT("effects"),TEXT("quality"),TEXT("fullscreen"),TEXT("view"),TEXT("back")};
+    if(MenuPage==5)return {TEXT("graphics"),TEXT("music"),TEXT("effects"),TEXT("quality"),TEXT("fullscreen"),TEXT("view"),TEXT("back")};
     return {TEXT("game"),TEXT("courses"),TEXT("scores"),TEXT("pace"),TEXT("customize"),TEXT("settings"),TEXT("intro"),TEXT("credits"),TEXT("quit")};
 }
 FString ACruiserWorld::MenuLabel(FName A)const{
@@ -46,7 +46,8 @@ FString ACruiserWorld::MenuLabel(FName A)const{
     if(A==TEXT("style"))return FString::Printf(TEXT("RIDE STYLE     <  %s  >"),VehicleName(VehicleStyle));
     if(A==TEXT("music"))return Muted?TEXT("GUITAR THEME     OFF"):TEXT("GUITAR THEME     ON");
     if(A==TEXT("effects"))return EffectsMuted?TEXT("NATURE & RIDE SOUND     OFF"):TEXT("NATURE & RIDE SOUND     ON");
-    if(A==TEXT("quality"))return UHDQuality?TEXT("PICTURE DETAIL     4K"):TEXT("PICTURE DETAIL     1080p");
+    if(A==TEXT("graphics"))return FString(TEXT("GRAPHICS     "))+(GraphicsPreset==0?TEXT("PERFORMANCE"):GraphicsPreset==1?TEXT("BALANCED"):TEXT("HIGH"));
+    if(A==TEXT("quality"))return GraphicsPreset==0?TEXT("SCENE DETAIL     900p / SHARP HUD"):GraphicsPreset==1?TEXT("SCENE DETAIL     UP TO 1080p"):UHDQuality?TEXT("SCENE DETAIL     UP TO 4K"):TEXT("SCENE DETAIL     UP TO 1080p");
     if(A==TEXT("fullscreen"))return TEXT("TOGGLE FULLSCREEN     F11");
     if(A==TEXT("customize"))return TEXT("CUSTOMIZE CHARACTER");
     if(A==TEXT("intro"))return TEXT("HOW TO PLAY");
@@ -57,7 +58,7 @@ FString ACruiserWorld::MenuLabel(FName A)const{
     return TEXT("BACK TO MAIN MENU");
 }
 void ACruiserWorld::MenuMove(int32 D){auto A=MenuActions();MenuFocus=(MenuFocus+D+A.Num())%A.Num();PlayEffect(TEXT("select"));}
-void ACruiserWorld::MenuAdjust(int32 D){auto A=MenuActions();MenuFocus=FMath::Clamp(MenuFocus,0,A.Num()-1);FName N=A[MenuFocus];if(N==TEXT("pace")||N==TEXT("gender")||N==TEXT("skin")||N==TEXT("outfit")||N==TEXT("helmet")||N==TEXT("bikecolor")||N==TEXT("style")||N==TEXT("quality")||N==TEXT("viewtilt")||N==TEXT("viewdistance"))MenuAction(N,D);}
+void ACruiserWorld::MenuAdjust(int32 D){auto A=MenuActions();MenuFocus=FMath::Clamp(MenuFocus,0,A.Num()-1);FName N=A[MenuFocus];if(N==TEXT("pace")||N==TEXT("gender")||N==TEXT("skin")||N==TEXT("outfit")||N==TEXT("helmet")||N==TEXT("bikecolor")||N==TEXT("style")||N==TEXT("quality")||N==TEXT("graphics")||N==TEXT("viewtilt")||N==TEXT("viewdistance"))MenuAction(N,D);}
 void ACruiserWorld::MenuAccept(){auto A=MenuActions();MenuAction(A[FMath::Clamp(MenuFocus,0,A.Num()-1)]);}
 void ACruiserWorld::MenuBack(){if(MenuPage==6){MenuPage=Simulation->GetState()==BMX::RunState::Ready?5:2;MenuFocus=0;return;}if(Simulation->GetState()!=BMX::RunState::Ready){if(Paused)Paused=false;else ReturnToTitle();}else {MenuPage=2;MenuFocus=0;}}
 void ACruiserWorld::MenuAction(FName A,int32 D){
@@ -82,7 +83,8 @@ void ACruiserWorld::MenuAction(FName A,int32 D){
     else if(A==TEXT("back")){MenuBack();SavePreferences();}
     else if(A==TEXT("music"))ToggleMusic();
     else if(A==TEXT("effects"))ToggleEffects();
-    else if(A==TEXT("quality"))SetResolution(!UHDQuality);
+    else if(A==TEXT("graphics"))SetGraphicsPreset((GraphicsPreset+D+3)%3);
+    else if(A==TEXT("quality")){if(GraphicsPreset==2)SetResolution(!UHDQuality);}
     else if(A==TEXT("fullscreen"))ToggleFullscreen();
     else if(A==TEXT("quit")){if(auto* PC=GetWorld()->GetFirstPlayerController())PC->ConsoleCommand(TEXT("quit"));}
     else {

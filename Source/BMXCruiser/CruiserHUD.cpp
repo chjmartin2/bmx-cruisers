@@ -11,10 +11,13 @@
 #include "Fonts/SlateFontInfo.h"
 #include "Fonts/CompositeFont.h"
 #include "Misc/Paths.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Core/DisplayLayout.h"
 namespace { ACruiserWorld* Ride(UWorld* W){for(TActorIterator<ACruiserWorld>I(W);I;++I)return *I;return nullptr;} }
 void ACruiserHUD::DrawHUD(){
  Super::DrawHUD();if(!Canvas)return;auto* G=Ride(GetWorld());if(!G)return;
+ FString SitePreview;if(FParse::Value(FCommandLine::Get(),TEXT("SitePreview="),SitePreview))return;
  const BMX::HUDLayout L(Canvas->SizeX,Canvas->SizeY,Canvas->GetDPIScale());const float S=L.Scale,X=L.X,Y=L.Y;
  const FLinearColor Paper(.95f,.94f,.86f),Yellow(.94f,.91f,.07f),Red(.91f,.075f,.035f),Blue(.045f,.12f,.25f),Ink(.008f,.014f,.029f,.97f),Dim(.54f,.61f,.66f);
  float Time=GetWorld()->GetTimeSeconds();
